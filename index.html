@@ -1,0 +1,2729 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>SPACE SHOOTER 3D — Explore the Galaxy. Fight for Survival.</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Orbitron (Sci-Fi Display) & Inter (Clean UI Readability) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    
+    <!-- Three.js r128 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        space: {
+                            bg: '#050816',
+                            primary: '#2563EB',
+                            secondary: '#7C3AED',
+                            accent: '#22D3EE',
+                            danger: '#EF4444',
+                            success: '#22C55E',
+                            text: '#F8FAFC'
+                        }
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        /* ==========================================
+           CUSTOM SCI-FI STYLES & ANIMATIONS (PRD 5.1 & 5.2)
+           ========================================== */
+        :root {
+            --bg-color: #050816;
+            --primary: #2563EB;
+            --secondary: #7C3AED;
+            --accent: #22D3EE;
+            --danger: #EF4444;
+            --success: #22C55E;
+            --text: #F8FAFC;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* 3D Canvas Container */
+        #game-canvas-container {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-color: #050816;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Sci-Fi Glassmorphism Panels */
+        .scifi-panel {
+            background: rgba(5, 8, 22, 0.78);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(34, 211, 238, 0.28);
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.2), inset 0 0 20px rgba(34, 211, 238, 0.06);
+        }
+
+        .scifi-hud-card {
+            background: rgba(5, 8, 22, 0.68);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(34, 211, 238, 0.05);
+        }
+
+        /* Futuristic Neon Buttons */
+        .scifi-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .scifi-btn-primary {
+            background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+            border: 1px solid #22D3EE;
+            box-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+        }
+
+        .scifi-btn-primary:hover {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 0 28px rgba(34, 211, 238, 0.65), 0 0 12px rgba(124, 58, 237, 0.5);
+            filter: brightness(1.12);
+        }
+
+        .scifi-btn-primary:active {
+            transform: translateY(0) scale(0.99);
+        }
+
+        .scifi-btn-secondary {
+            background: rgba(37, 99, 235, 0.14);
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            color: #F8FAFC;
+        }
+
+        .scifi-btn-secondary:hover {
+            background: rgba(34, 211, 238, 0.18);
+            border-color: #22D3EE;
+            box-shadow: 0 0 16px rgba(34, 211, 238, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .scifi-btn-danger {
+            background: rgba(239, 68, 68, 0.16);
+            border: 1px solid rgba(239, 68, 68, 0.55);
+            color: #FCA5A5;
+        }
+
+        .scifi-btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: #EF4444;
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Glow Text Effects */
+        .glow-cyan {
+            text-shadow: 0 0 12px rgba(34, 211, 238, 0.7), 0 0 28px rgba(37, 99, 235, 0.5);
+        }
+
+        .glow-purple {
+            text-shadow: 0 0 14px rgba(124, 58, 237, 0.8);
+        }
+
+        .glow-danger {
+            text-shadow: 0 0 16px rgba(239, 68, 68, 0.85);
+        }
+
+        /* Damage Vignette Flash */
+        #damage-overlay {
+            pointer-events: none;
+            transition: opacity 0.18s ease-out;
+            background: radial-gradient(circle, transparent 45%, rgba(239, 68, 68, 0.55) 100%);
+        }
+
+        /* Level Up Banner Animation */
+        @keyframes levelUpPulse {
+            0% { transform: translate(-50%, -20px) scale(0.85); opacity: 0; }
+            15% { transform: translate(-50%, 0) scale(1.04); opacity: 1; }
+            85% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -15px) scale(0.95); opacity: 0; }
+        }
+
+        .animate-level-up {
+            animation: levelUpPulse 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Floating Score Popup Animation */
+        @keyframes floatScore {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+            100% { transform: translate(-50%, -140%) scale(1.1); opacity: 0; }
+        }
+
+        .score-popup {
+            position: absolute;
+            pointer-events: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            animation: floatScore 0.85s ease-out forwards;
+            z-index: 25;
+        }
+
+        /* Custom Range Sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: rgba(30, 41, 59, 0.9);
+            border-radius: 999px;
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #22D3EE;
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+            cursor: pointer;
+            border: 2px solid #F8FAFC;
+        }
+
+        /* Custom Scrollbar for Modals */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(5, 8, 22, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(34, 211, 238, 0.4);
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body class="relative select-none">
+
+    <!-- ==========================================
+         3D WEBGL CANVAS CONTAINER
+         ========================================== -->
+    <div id="game-canvas-container"></div>
+
+    <!-- ==========================================
+         SCREEN DAMAGE OVERLAY & FLOATING POPUPS
+         ========================================== -->
+    <div id="damage-overlay" class="fixed inset-0 z-10 opacity-0"></div>
+    <div id="popups-container" class="fixed inset-0 z-20 pointer-events-none overflow-hidden"></div>
+
+    <!-- ==========================================
+         STATE 1: LOADING SCREEN (NFR-03)
+         ========================================== -->
+    <div id="screen-loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050816] transition-opacity duration-500">
+        <div class="relative w-24 h-24 mb-6 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border-4 border-cyan-400/20"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-t-cyan-400 border-r-blue-500 border-b-transparent border-l-transparent animate-spin"></div>
+            <i class="fa-solid fa-shuttle-space text-3xl text-cyan-400 animate-pulse"></i>
+        </div>
+        <h1 class="font-orbitron text-2xl md:text-3xl font-extrabold tracking-widest text-white glow-cyan mb-2">
+            SPACE SHOOTER 3D
+        </h1>
+        <p class="text-cyan-300/80 text-sm tracking-widest uppercase mb-6">Memuat Sistem Galaksi & Aset 3D...</p>
+        <div class="w-64 h-2 bg-slate-800 rounded-full overflow-hidden border border-cyan-500/30">
+            <div id="loading-bar-fill" class="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-400 w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         STATE 2: MAIN MENU (FR-16 & Section 5.3.A)
+         ========================================== -->
+    <div id="screen-menu" class="fixed inset-0 z-30 hidden flex-col justify-between p-4 sm:p-8 pointer-events-none">
+        <!-- Top Bar: High Score & Version Badge -->
+        <div class="w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 pointer-events-auto">
+            <div class="scifi-hud-card px-4 py-2 rounded-xl flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span class="font-orbitron text-xs tracking-wider text-slate-300">SYSTEM ONLINE // VER 1.0</span>
+            </div>
+
+            <div class="scifi-hud-card px-5 py-2.5 rounded-xl flex items-center gap-3 border-cyan-400/40">
+                <i class="fa-solid fa-trophy text-amber-400 text-lg"></i>
+                <div>
+                    <div class="text-[10px] uppercase tracking-widest text-slate-400">High Score</div>
+                    <div id="menu-highscore" class="font-orbitron text-lg font-bold text-cyan-300">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center / Left Hero Content & Menu Buttons -->
+        <div class="w-full max-w-6xl mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div class="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left pointer-events-auto">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-600/20 border border-cyan-400/40 text-cyan-300 text-xs font-semibold tracking-widest uppercase mb-4">
+                    <i class="fa-solid fa-satellite-dish"></i> 3D Space Combat Arcade
+                </div>
+                <h1 class="font-orbitron text-4xl sm:text-6xl font-black tracking-tight text-white glow-cyan leading-none mb-3">
+                    SPACE <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">SHOOTER</span> 3D
+                </h1>
+                <p class="font-orbitron text-sm sm:text-base text-cyan-200/90 tracking-widest uppercase mb-8">
+                    Explore the Galaxy. Fight for Survival.
+                </p>
+
+                <!-- Main Action Buttons -->
+                <div class="w-full max-w-sm flex flex-col gap-3.5">
+                    <button id="btn-start-game" class="scifi-btn scifi-btn-primary w-full py-4 px-6 rounded-xl text-base font-bold text-white flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-play"></i> Start Game
+                    </button>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-how-to-play" class="scifi-btn scifi-btn-secondary py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-gamepad text-cyan-400"></i> How to Play
+                        </button>
+                        <button id="btn-leaderboard" class="scifi-btn scifi-btn-secondary py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-ranking-star text-amber-400"></i> Leaderboard
+                        </button>
+                    </div>
+
+                    <button id="btn-settings-menu" class="scifi-btn scifi-btn-secondary w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-sliders text-purple-400"></i> Settings & Audio
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: 3D Ship Showcase Telemetry Box -->
+            <div class="hidden lg:flex lg:col-span-5 flex-col items-end justify-center pointer-events-none">
+                <div class="scifi-hud-card p-4 rounded-2xl w-72 border-cyan-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between border-b border-slate-700/70 pb-2">
+                        <span class="font-orbitron text-xs font-bold text-cyan-400">AEGIS-V STRIKE FIGHTER</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">READY</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-slate-900/70 p-2 rounded-lg">
+                            <div class="text-slate-400 text-[10px]">SENJATA UTAMA</div>
+                            <div class="font-semibold text-white">Dual Photon 25 DMG</div>
+                        </div>
+                        <div class="bg-slate-900/70 p-2 rounded-lg">
+                            <div class="text-slate-400 text-[10px]">INTEGRITAS HULL</div>
+                            <div class="font-semibold text-emerald-400">100 HP + Shield</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Bar: Quick Control Summary -->
+        <div class="w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 pointer-events-auto">
+            <div class="flex flex-wrap items-center gap-4">
+                <span><kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono">WASD / Arrows</kbd> Manuver Pesawat</span>
+                <span><kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono">SPACE</kbd> Tembak Laser</span>
+                <span><kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono">ESC / P</kbd> Pause</span>
+            </div>
+            <div class="text-slate-500">Three.js WebGL Engine</div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         STATE 3: GAMEPLAY HUD (Section 5.3.B)
+         ========================================== -->
+    <div id="screen-hud" class="fixed inset-0 z-20 hidden flex-col justify-between p-3 sm:p-5 pointer-events-none">
+        <!-- Top HUD Row -->
+        <div class="w-full max-w-7xl mx-auto grid grid-cols-3 items-start gap-2 sm:gap-4">
+            
+            <!-- Top-Left: Health Bar (FR-07) -->
+            <div class="flex flex-col items-start gap-2">
+                <div class="scifi-hud-card p-3 sm:px-4 sm:py-3 rounded-2xl w-full max-w-[260px]">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-orbitron text-[11px] sm:text-xs font-bold tracking-wider text-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved text-cyan-400"></i> HULL INTEGRITY
+                        </span>
+                        <span id="hud-hp-text" class="font-orbitron text-xs sm:text-sm font-extrabold text-emerald-400">100 / 100</span>
+                    </div>
+                    <div class="w-full h-3 bg-slate-900/90 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                        <div id="hud-hp-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-200" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top-Center: Score & Level Target Progress (FR-10, FR-11) -->
+            <div class="flex flex-col items-center">
+                <div class="scifi-hud-card px-4 sm:px-7 py-2.5 rounded-2xl text-center min-w-[160px] sm:min-w-[230px]">
+                    <div class="text-[10px] uppercase tracking-widest text-cyan-300/80 font-semibold">SCORE</div>
+                    <div id="hud-score" class="font-orbitron text-xl sm:text-3xl font-black text-white glow-cyan leading-tight">0</div>
+                    <div class="flex items-center justify-center gap-3 mt-1 pt-1 border-t border-slate-700/60 text-[10px] sm:text-xs text-slate-400">
+                        <span>TARGET: <strong id="hud-target-score" class="text-cyan-300">100</strong></span>
+                        <span>•</span>
+                        <span>BEST: <strong id="hud-high-score" class="text-amber-400">0</strong></span>
+                    </div>
+                </div>
+
+                <!-- Boss Health Bar (Visible when Boss Ship is active) -->
+                <div id="hud-boss-container" class="hidden mt-3 scifi-hud-card px-4 py-2 rounded-xl w-64 sm:w-80 border-red-500/60">
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="font-orbitron font-bold text-red-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-skull-crossbones animate-pulse"></i> DREADNOUGHT BOSS
+                        </span>
+                        <span id="hud-boss-hp-text" class="font-orbitron text-red-300 text-xs">250 HP</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-red-500/40">
+                        <div id="hud-boss-hp-bar" class="h-full bg-gradient-to-r from-red-600 to-amber-500 transition-all duration-150" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top-Right: Level, Zone Theme & Pause Button (FR-13, FR-15, FR-17) -->
+            <div class="flex items-start justify-end gap-2 sm:gap-3">
+                <div class="scifi-hud-card px-3.5 sm:px-4 py-2.5 rounded-2xl text-right">
+                    <div class="flex items-center justify-end gap-2">
+                        <span class="text-[10px] uppercase tracking-widest text-slate-400">LEVEL</span>
+                        <span id="hud-level" class="font-orbitron text-lg sm:text-2xl font-black text-cyan-400 leading-none">1</span>
+                    </div>
+                    <div id="hud-zone-name" class="text-[10px] sm:text-xs font-medium text-purple-300 truncate max-w-[120px] sm:max-w-none">
+                        Deep Space
+                    </div>
+                </div>
+
+                <button id="btn-hud-pause" class="pointer-events-auto scifi-hud-card hover:border-cyan-400 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-white hover:text-cyan-300 transition-all" title="Pause Game (Esc / P)">
+                    <i class="fa-solid fa-pause text-base sm:text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Center Level Up Banner Notification (FR-13) -->
+        <div id="level-up-banner" class="hidden fixed top-28 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+            <div class="scifi-panel px-8 py-4 rounded-2xl border-2 border-cyan-400 text-center shadow-2xl">
+                <div class="font-orbitron text-xs uppercase tracking-[0.25em] text-cyan-300 mb-1">Sector Cleared</div>
+                <div id="level-up-title" class="font-orbitron text-2xl sm:text-3xl font-black text-white glow-cyan">LEVEL 2 REACHED!</div>
+                <div id="level-up-subtitle" class="text-xs sm:text-sm text-purple-300 mt-1">Entering Zone: Blue Nebula</div>
+            </div>
+        </div>
+
+        <!-- Bottom HUD: Control Hints (Desktop) & Touch Controls (Tablet/Mobile) -->
+        <div class="w-full max-w-7xl mx-auto flex flex-col gap-3">
+            <!-- Touch Controls for Mobile / Tablet -->
+            <div id="touch-controls" class="flex md:hidden items-center justify-between w-full px-2 pb-2 pointer-events-auto">
+                <!-- Virtual D-Pad -->
+                <div class="grid grid-cols-3 gap-1.5 w-36 h-36">
+                    <div></div>
+                    <button data-touch-dir="up" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300"><i class="fa-solid fa-chevron-up"></i></button>
+                    <div></div>
+                    <button data-touch-dir="left" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="rounded-xl bg-slate-900/40 border border-slate-700/40 flex items-center justify-center"><i class="fa-solid fa-crosshairs text-xs text-slate-500"></i></div>
+                    <button data-touch-dir="right" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300"><i class="fa-solid fa-chevron-right"></i></button>
+                    <div></div>
+                    <button data-touch-dir="down" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300"><i class="fa-solid fa-chevron-down"></i></button>
+                    <div></div>
+                </div>
+
+                <!-- Touch Fire Laser Button -->
+                <button id="btn-touch-fire" class="w-24 h-24 rounded-full scifi-btn-primary flex flex-col items-center justify-center text-white shadow-lg active:scale-95">
+                    <i class="fa-solid fa-burst text-2xl mb-1"></i>
+                    <span class="font-orbitron text-[10px] font-bold">FIRE</span>
+                </button>
+            </div>
+
+            <!-- Desktop Control Guide Bar -->
+            <div class="hidden md:flex items-center justify-between scifi-hud-card px-4 py-2 rounded-xl text-xs text-slate-300/90 w-fit mx-auto gap-6">
+                <span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-cyan-300 font-mono text-[11px]">W A S D</kbd> / <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-cyan-300 font-mono text-[11px]">Arrows</kbd> Move</span>
+                <span class="flex items-center gap-2"><kbd class="px-2 py-0.5 bg-slate-800 rounded border border-slate-600 text-cyan-300 font-mono text-[11px]">SPACE</kbd> Laser Cannon</span>
+                <span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-cyan-300 font-mono text-[11px]">ESC / P</kbd> Pause</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         STATE 4: PAUSE MENU (FR-17 & Section 5.3.C)
+         ========================================== -->
+    <div id="screen-pause" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/70 backdrop-blur-md p-4">
+        <div class="scifi-panel w-full max-w-md rounded-3xl p-6 sm:p-8 text-center border border-cyan-400/40">
+            <div class="w-14 h-14 rounded-2xl bg-blue-600/20 border border-cyan-400/40 flex items-center justify-center mx-auto mb-4 text-cyan-400 text-2xl">
+                <i class="fa-solid fa-pause"></i>
+            </div>
+            <h2 class="font-orbitron text-2xl sm:text-3xl font-extrabold text-white glow-cyan mb-1">GAME PAUSED</h2>
+            <p class="text-xs sm:text-sm text-slate-400 mb-6">Sistem pertempuran dihentikan sementara</p>
+
+            <div class="flex flex-col gap-3">
+                <button id="btn-pause-resume" class="scifi-btn scifi-btn-primary py-3.5 px-6 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> Resume Game
+                </button>
+                <button id="btn-pause-restart" class="scifi-btn scifi-btn-secondary py-3 px-6 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right text-cyan-400"></i> Restart Mission
+                </button>
+                <button id="btn-pause-settings" class="scifi-btn scifi-btn-secondary py-3 px-6 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-sliders text-purple-400"></i> Settings
+                </button>
+                <button id="btn-pause-menu" class="scifi-btn scifi-btn-danger py-3 px-6 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 mt-1">
+                    <i class="fa-solid fa-house"></i> Main Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         STATE 5: GAME OVER SCREEN (FR-08, FR-09 & Section 5.3.D)
+         ========================================== -->
+    <div id="screen-gameover" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="scifi-panel w-full max-w-lg rounded-3xl p-6 sm:p-8 text-center border border-red-500/40">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-semibold uppercase tracking-widest mb-3">
+                <i class="fa-solid fa-triangle-exclamation"></i> Hull Critical — Ship Destroyed
+            </div>
+            <h2 class="font-orbitron text-3xl sm:text-4xl font-black text-white glow-danger mb-2">GAME OVER</h2>
+            <div id="gameover-new-record" class="hidden inline-block px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 font-orbitron text-xs font-bold tracking-wider mb-4 animate-bounce">
+                ★ REKOR TERTINGGI BARU! ★
+            </div>
+
+            <!-- Stats Summary Grid -->
+            <div class="grid grid-cols-3 gap-3 my-5">
+                <div class="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Skor Akhir</div>
+                    <div id="gameover-score" class="font-orbitron text-xl sm:text-2xl font-extrabold text-cyan-400 mt-1">0</div>
+                </div>
+                <div class="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Level Terakhir</div>
+                    <div id="gameover-level" class="font-orbitron text-xl sm:text-2xl font-extrabold text-purple-400 mt-1">1</div>
+                </div>
+                <div class="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">High Score</div>
+                    <div id="gameover-best" class="font-orbitron text-xl sm:text-2xl font-extrabold text-amber-400 mt-1">0</div>
+                </div>
+            </div>
+
+            <!-- Save Score to Local Leaderboard (FR-12) -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3.5 mb-6 text-left">
+                <label for="player-name-input" class="block text-xs text-slate-300 font-medium mb-2">
+                    <i class="fa-solid fa-user-astronaut text-cyan-400 mr-1"></i> Simpan ke Leaderboard Lokal:
+                </label>
+                <div class="flex gap-2">
+                    <input id="player-name-input" type="text" maxlength="16" placeholder="Nama Pilot (mis. Commander)" value="Pilot"
+                        class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400" />
+                    <button id="btn-save-score" class="scifi-btn scifi-btn-secondary px-4 py-2 rounded-xl text-xs font-bold shrink-0">
+                        Simpan
+                    </button>
+                </div>
+                <p id="save-score-feedback" class="text-[11px] text-emerald-400 mt-1.5 hidden">
+                    <i class="fa-solid fa-check-circle"></i> Skor berhasil disimpan ke Leaderboard!
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button id="btn-gameover-restart" class="scifi-btn scifi-btn-primary py-3.5 px-6 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Main Lagi
+                </button>
+                <button id="btn-gameover-menu" class="scifi-btn scifi-btn-secondary py-3.5 px-6 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-house"></i> Menu Utama
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL 1: HOW TO PLAY (Section 5.4 & 9)
+         ========================================== -->
+    <div id="modal-howtoplay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-4">
+        <div class="scifi-panel w-full max-w-2xl rounded-3xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-4 mb-5">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-book-journal-whills text-2xl text-cyan-400"></i>
+                    <h3 class="font-orbitron text-xl sm:text-2xl font-bold text-white">PANDUAN TEMPUR (HOW TO PLAY)</h3>
+                </div>
+                <button data-close-modal="modal-howtoplay" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6 text-sm text-slate-300">
+                <!-- Controls Table -->
+                <div>
+                    <h4 class="font-orbitron text-xs uppercase tracking-wider text-cyan-400 font-bold mb-2.5">1. Kontrol Pesawat</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                            <span>Bergerak ke Atas / Bawah</span>
+                            <kbd class="px-2 py-1 bg-slate-800 rounded text-xs text-cyan-300 font-mono">W / S / ↑ / ↓</kbd>
+                        </div>
+                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                            <span>Bergerak ke Kiri / Kanan</span>
+                            <kbd class="px-2 py-1 bg-slate-800 rounded text-xs text-cyan-300 font-mono">A / D / ← / →</kbd>
+                        </div>
+                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                            <span>Menembakkan Laser</span>
+                            <kbd class="px-2.5 py-1 bg-slate-800 rounded text-xs text-cyan-300 font-mono">SPACE</kbd>
+                        </div>
+                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                            <span>Pause / Resume Game</span>
+                            <kbd class="px-2 py-1 bg-slate-800 rounded text-xs text-cyan-300 font-mono">ESC / P</kbd>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scoring & Targets -->
+                <div>
+                    <h4 class="font-orbitron text-xs uppercase tracking-wider text-purple-400 font-bold mb-2.5">2. Skor Sasaran & Jenis Musuh</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl">
+                            <div class="font-bold text-white">Asteroid Kecil / Sedang / Besar</div>
+                            <div class="text-cyan-400 font-orbitron mt-1">+10 / +20 / +30 Poin</div>
+                            <div class="text-slate-400 mt-0.5">Tabrakan: -20 HP</div>
+                        </div>
+                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl">
+                            <div class="font-bold text-orange-300">Scout Fighter & Alien Drone</div>
+                            <div class="text-cyan-400 font-orbitron mt-1">+50 Poin</div>
+                            <div class="text-slate-400 mt-0.5">Cepat & Bergerombol</div>
+                        </div>
+                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl col-span-2 sm:col-span-1">
+                            <div class="font-bold text-purple-300">Heavy Fighter & Boss Ship</div>
+                            <div class="text-amber-400 font-orbitron mt-1">+100 / +500 Poin</div>
+                            <div class="text-slate-400 mt-0.5">Armor Kuat & Multi-Laser</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Damage & Progression Rules -->
+                <div class="bg-blue-950/30 border border-cyan-500/30 rounded-2xl p-4 text-xs leading-relaxed space-y-1.5">
+                    <div class="font-orbitron text-cyan-300 font-bold uppercase">Tips Bertahan Hidup:</div>
+                    <p>• Pesawat Anda memiliki <strong>100 HP</strong>. Proyektil musuh mengurangi <strong>-15 HP</strong>, tabrakan asteroid <strong>-20 HP</strong>, dan tabrakan pesawat musuh <strong>-30 HP</strong>.</p>
+                    <p>• Setiap kenaikan level (100, 250, 450, 700, 1000+ poin) akan membuka zona galaksi baru dan meningkatkan intensitas pertempuran.</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-right">
+                <button data-close-modal="modal-howtoplay" class="scifi-btn scifi-btn-primary px-6 py-2.5 rounded-xl text-xs font-bold text-white">
+                    Mengerti, Siap Tempur!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL 2: LOCAL LEADERBOARD (FR-12)
+         ========================================== -->
+    <div id="modal-leaderboard" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-4">
+        <div class="scifi-panel w-full max-w-xl rounded-3xl p-6 sm:p-8 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-trophy text-2xl text-amber-400"></i>
+                    <div>
+                        <h3 class="font-orbitron text-xl font-bold text-white">HALL OF FAME</h3>
+                        <p class="text-xs text-slate-400">Top 10 Rekor Pilot Lokal Terbaik</p>
+                    </div>
+                </div>
+                <button data-close-modal="modal-leaderboard" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Leaderboard Table Container -->
+            <div class="overflow-y-auto flex-1 pr-1">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-slate-400 font-orbitron text-[11px] uppercase">
+                            <th class="py-2.5 px-3">#</th>
+                            <th class="py-2.5 px-3">Pilot</th>
+                            <th class="py-2.5 px-3 text-right">Skor</th>
+                            <th class="py-2.5 px-3 text-center">Level</th>
+                            <th class="py-2.5 px-3 text-right">Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-tbody" class="divide-y divide-slate-800/80">
+                        <!-- Populated dynamically via StorageManager -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Reset Confirmation Inline Box (Avoids native confirm()) -->
+            <div id="reset-confirm-box" class="hidden mt-4 p-3.5 rounded-xl bg-red-950/50 border border-red-500/50 flex items-center justify-between gap-3 text-xs">
+                <span class="text-red-200">Hapus seluruh rekor skor lokal secara permanen?</span>
+                <div class="flex gap-2 shrink-0">
+                    <button id="btn-confirm-reset-yes" class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold">Ya, Hapus</button>
+                    <button id="btn-confirm-reset-no" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200">Batal</button>
+                </div>
+            </div>
+
+            <div class="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between">
+                <button id="btn-trigger-reset" class="scifi-btn scifi-btn-danger px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash-can"></i> Reset Data
+                </button>
+                <button data-close-modal="modal-leaderboard" class="scifi-btn scifi-btn-primary px-6 py-2.5 rounded-xl text-xs font-bold text-white">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL 3: SETTINGS & AUDIO (FR-18)
+         ========================================== -->
+    <div id="modal-settings" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-4">
+        <div class="scifi-panel w-full max-w-lg rounded-3xl p-6 sm:p-8">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-4 mb-5">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-sliders text-2xl text-purple-400"></i>
+                    <h3 class="font-orbitron text-xl font-bold text-white">PENGATURAN SISTEM</h3>
+                </div>
+                <button data-close-modal="modal-settings" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-5 text-sm">
+                <!-- Music Toggle & Volume -->
+                <div class="bg-slate-900/70 border border-slate-800 p-4 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-music text-cyan-400"></i> Background Music
+                        </span>
+                        <button id="toggle-music" class="px-3.5 py-1 rounded-full text-xs font-orbitron font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            ON
+                        </button>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>Volume Musik</span>
+                            <span id="label-music-vol">50%</span>
+                        </div>
+                        <input id="slider-music-vol" type="range" min="0" max="100" value="50" />
+                    </div>
+                </div>
+
+                <!-- SFX Toggle & Volume -->
+                <div class="bg-slate-900/70 border border-slate-800 p-4 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-volume-high text-purple-400"></i> Sound Effects (SFX)
+                        </span>
+                        <button id="toggle-sfx" class="px-3.5 py-1 rounded-full text-xs font-orbitron font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            ON
+                        </button>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>Volume Efek Suara</span>
+                            <span id="label-sfx-vol">80%</span>
+                        </div>
+                        <input id="slider-sfx-vol" type="range" min="0" max="100" value="80" />
+                    </div>
+                </div>
+
+                <!-- Control Sensitivity -->
+                <div class="bg-slate-900/70 border border-slate-800 p-4 rounded-2xl space-y-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="font-semibold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-gauge-high text-amber-400"></i> Sensitivitas Manuver Pesawat
+                        </span>
+                        <span id="label-sensitivity" class="text-cyan-300 font-orbitron">100%</span>
+                    </div>
+                    <input id="slider-sensitivity" type="range" min="60" max="150" value="100" />
+                </div>
+            </div>
+
+            <div class="mt-6 text-right">
+                <button data-close-modal="modal-settings" class="scifi-btn scifi-btn-primary px-6 py-2.5 rounded-xl text-xs font-bold text-white">
+                    Simpan & Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODULAR ES6 GAME ARCHITECTURE (PRD Section 7 & 19)
+         ========================================== -->
+    <script>
+        /**
+         * ============================================================================
+         * 1. CENTRAL CONFIGURATION (gameConfig, enemyConfig, levelConfig)
+         * ============================================================================
+         */
+        const GAME_CONFIG = {
+            PLAYER: {
+                MAX_HP: 100,
+                BASE_SPEED: 16,          // Units/sec (scaled from PRD 10u/s to match 3D arena width)
+                LASER_COOLDOWN: 0.25,    // PRD 9.1: 0.25 seconds
+                LASER_DAMAGE: 25,        // PRD 9.1: 25 damage
+                LASER_SPEED: 85,
+                INVULNERABLE_TIME: 0.65, // Cooldown to prevent multi-frame collision drain (FR-07)
+                BOUNDS_X: 16,
+                BOUNDS_Y_MIN: -8,
+                BOUNDS_Y_MAX: 9
+            },
+            DAMAGE: {
+                ASTEROID_COLLISION: 20,  // PRD FR-07: -20 HP
+                ENEMY_PROJECTILE: 15,    // PRD FR-07: -15 HP
+                ENEMY_COLLISION: 30      // PRD FR-07: -30 HP
+            },
+            SCORES: {
+                ASTEROID_SMALL: 10,      // PRD FR-10: +10
+                ASTEROID_MEDIUM: 20,     // PRD FR-10: +20
+                ASTEROID_LARGE: 30,      // PRD FR-10: +30
+                ENEMY_SCOUT: 50,         // PRD FR-10: +50
+                ENEMY_DRONE: 50,         // PRD FR-10: +50
+                ENEMY_HEAVY: 100,        // PRD FR-10: +100 (Elite)
+                ENEMY_BOSS: 500          // PRD FR-10: +500 (Boss)
+            },
+            SPAWN: {
+                BASE_ASTEROID_INTERVAL: 1.6, // Base interval in seconds
+                BASE_ENEMY_INTERVAL: 4.8,
+                SPAWN_Z: -135,
+                DESPAWN_Z: 22
+            },
+            LEVELS: [
+                // PRD FR-13 & FR-15: Level Progression & Environment Themes
+                { level: 1, targetScore: 100,  name: 'Deep Space',     bgHex: 0x050816, fogHex: 0x050816, accentHex: 0x22d3ee, speedMult: 1.0,  spawnMult: 1.0,  showPlanet: false },
+                { level: 2, targetScore: 250,  name: 'Blue Nebula',    bgHex: 0x06122e, fogHex: 0x091e4a, accentHex: 0x38bdf8, speedMult: 1.15, spawnMult: 1.18, showPlanet: false },
+                { level: 3, targetScore: 450,  name: 'Red Galaxy',     bgHex: 0x1a0618, fogHex: 0x2d0922, accentHex: 0xf43f5e, speedMult: 1.3,  spawnMult: 1.35, showPlanet: false },
+                { level: 4, targetScore: 700,  name: 'Planetary Zone', bgHex: 0x080d24, fogHex: 0x111a42, accentHex: 0xa855f7, speedMult: 1.45, spawnMult: 1.5,  showPlanet: true  },
+                { level: 5, targetScore: 1000, name: 'Omega Sector',   bgHex: 0x120726, fogHex: 0x1f0b3d, accentHex: 0xf59e0b, speedMult: 1.6,  spawnMult: 1.65, showPlanet: true  }
+            ]
+        };
+
+        const GAME_STATE = {
+            LOADING: 'LOADING',
+            MENU: 'MENU',
+            PLAYING: 'PLAYING',
+            PAUSED: 'PAUSED',
+            LEVEL_UP: 'LEVEL_UP',
+            GAME_OVER: 'GAME_OVER'
+        };
+
+        /**
+         * ============================================================================
+         * 2. STORAGE MANAGER (PRD Section 8: LocalStorage Persistence & Validation)
+         * ============================================================================
+         */
+        class StorageManager {
+            constructor() {
+                this.STORAGE_KEY = 'SPACE_SHOOTER_3D_DATA_V1';
+                this.data = this.load();
+            }
+
+            getDefaultData() {
+                return {
+                    highScore: 0,
+                    settings: {
+                        musicVolume: 0.5,
+                        sfxVolume: 0.8,
+                        musicEnabled: true,
+                        sfxEnabled: true,
+                        sensitivity: 1.0
+                    },
+                    leaderboard: [
+                        { name: 'Commander Vega', score: 650, level: 4, date: '2026-11-01' },
+                        { name: 'Capt. Orion', score: 320, level: 3, date: '2026-11-02' },
+                        { name: 'Lt. Nova', score: 150, level: 2, date: '2026-11-02' }
+                    ]
+                };
+            }
+
+            load() {
+                try {
+                    const raw = localStorage.getItem(this.STORAGE_KEY);
+                    if (!raw) return this.getDefaultData();
+                    const parsed = JSON.parse(raw);
+                    const def = this.getDefaultData();
+                    return {
+                        highScore: typeof parsed.highScore === 'number' ? parsed.highScore : def.highScore,
+                        settings: { ...def.settings, ...(parsed.settings || {}) },
+                        leaderboard: Array.isArray(parsed.leaderboard) ? parsed.leaderboard : def.leaderboard
+                    };
+                } catch (err) {
+                    console.warn('LocalStorage fallback used:', err);
+                    return this.getDefaultData();
+                }
+            }
+
+            save() {
+                try {
+                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
+                } catch (err) {
+                    console.warn('Unable to save to LocalStorage:', err);
+                }
+            }
+
+            updateHighScore(score) {
+                if (score > this.data.highScore) {
+                    this.data.highScore = score;
+                    this.save();
+                    return true;
+                }
+                return false;
+            }
+
+            addLeaderboardEntry(name, score, level) {
+                const cleanName = (name || 'Pilot').trim().slice(0, 16) || 'Pilot';
+                const today = new Date().toISOString().split('T')[0];
+                this.data.leaderboard.push({
+                    name: cleanName,
+                    score: Math.floor(score),
+                    level: level,
+                    date: today
+                });
+                // Sort descending by score and keep top 10 (FR-12)
+                this.data.leaderboard.sort((a, b) => b.score - a.score);
+                this.data.leaderboard = this.data.leaderboard.slice(0, 10);
+                if (score > this.data.highScore) {
+                    this.data.highScore = score;
+                }
+                this.save();
+            }
+
+            resetLeaderboard() {
+                this.data.highScore = 0;
+                this.data.leaderboard = [];
+                this.save();
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 3. PROCEDURAL WEB AUDIO SYNTHESIZER (PRD FR-21)
+         * ============================================================================
+         */
+        class AudioManager {
+            constructor(storage) {
+                this.storage = storage;
+                this.ctx = null;
+                this.musicTimer = null;
+                this.isPlayingMusic = false;
+                this.musicStep = 0;
+            }
+
+            initContext() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            get settings() {
+                return this.storage.data.settings;
+            }
+
+            playLaser() {
+                if (!this.settings.sfxEnabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(920, now);
+                osc.frequency.exponentialRampToValueAtTime(160, now + 0.13);
+
+                gain.gain.setValueAtTime(0.18 * this.settings.sfxVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.14);
+            }
+
+            playEnemyLaser() {
+                if (!this.settings.sfxEnabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(420, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.16);
+
+                gain.gain.setValueAtTime(0.1 * this.settings.sfxVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.17);
+            }
+
+            playExplosion(isLarge = false) {
+                if (!this.settings.sfxEnabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const duration = isLarge ? 0.55 : 0.32;
+
+                // Noise buffer for explosion burst
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(isLarge ? 600 : 900, now);
+                filter.frequency.exponentialRampToValueAtTime(80, now + duration);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime((isLarge ? 0.38 : 0.24) * this.settings.sfxVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start(now);
+                noise.stop(now + duration);
+            }
+
+            playHit() {
+                if (!this.settings.sfxEnabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(190, now);
+                osc.frequency.exponentialRampToValueAtTime(55, now + 0.22);
+
+                gain.gain.setValueAtTime(0.32 * this.settings.sfxVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.23);
+            }
+
+            playLevelUp() {
+                if (!this.settings.sfxEnabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((freq, idx) => {
+                    const now = this.ctx.currentTime + idx * 0.09;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.22 * this.settings.sfxVolume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.29);
+                });
+            }
+
+            playGameOver() {
+                if (!this.settings.sfxEnabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const notes = [392, 349.23, 311.13, 261.63];
+                notes.forEach((freq, idx) => {
+                    const now = this.ctx.currentTime + idx * 0.18;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.2 * this.settings.sfxVolume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.36);
+                });
+            }
+
+            playUIClick() {
+                if (!this.settings.sfxEnabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.exponentialRampToValueAtTime(1600, now + 0.05);
+
+                gain.gain.setValueAtTime(0.12 * this.settings.sfxVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            }
+
+            startMusic() {
+                if (this.isPlayingMusic) return;
+                this.isPlayingMusic = true;
+                const bassSequence = [110, 110, 130.81, 146.83, 110, 110, 98, 130.81];
+
+                this.musicTimer = setInterval(() => {
+                    if (!this.settings.musicEnabled || !this.ctx || this.ctx.state !== 'running') return;
+                    const freq = bassSequence[this.musicStep % bassSequence.length];
+                    this.musicStep++;
+
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const filter = this.ctx.createBiquadFilter();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(360, now);
+
+                    gain.gain.setValueAtTime(0.075 * this.settings.musicVolume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.23);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + 0.24);
+                }, 250);
+            }
+
+            stopMusic() {
+                if (this.musicTimer) {
+                    clearInterval(this.musicTimer);
+                    this.musicTimer = null;
+                }
+                this.isPlayingMusic = false;
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 4. OBJECT POOL MANAGER (PRD Section 6.1 Performance Optimization)
+         * ============================================================================
+         */
+        class ObjectPool {
+            constructor(createFn, initialSize = 20) {
+                this.createFn = createFn;
+                this.pool = [];
+                this.active = [];
+                for (let i = 0; i < initialSize; i++) {
+                    const item = this.createFn();
+                    item.mesh.visible = false;
+                    this.pool.push(item);
+                }
+            }
+
+            acquire() {
+                let item = this.pool.length > 0 ? this.pool.pop() : this.createFn();
+                item.mesh.visible = true;
+                item.active = true;
+                this.active.push(item);
+                return item;
+            }
+
+            release(item) {
+                item.active = false;
+                item.mesh.visible = false;
+                const idx = this.active.indexOf(item);
+                if (idx !== -1) {
+                    this.active.splice(idx, 1);
+                }
+                this.pool.push(item);
+            }
+
+            releaseAll() {
+                while (this.active.length > 0) {
+                    const item = this.active.pop();
+                    item.active = false;
+                    item.mesh.visible = false;
+                    this.pool.push(item);
+                }
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 5. 3D MODEL FACTORIES (Procedural Low-Poly Sci-Fi Geometries)
+         * ============================================================================
+         */
+        class ModelFactory {
+            static createPlayerShip() {
+                const group = new THREE.Group();
+
+                // Main Fuselage
+                const bodyGeo = new THREE.ConeGeometry(0.85, 3.8, 6);
+                bodyGeo.rotateX(Math.PI / 2);
+                const bodyMat = new THREE.MeshStandardMaterial({
+                    color: 0xe2e8f0,
+                    metalness: 0.65,
+                    roughness: 0.25
+                });
+                const body = new THREE.Mesh(bodyGeo, bodyMat);
+                group.add(body);
+
+                // Cockpit Canopy
+                const cockpitGeo = new THREE.SphereGeometry(0.48, 12, 8);
+                cockpitGeo.scale(0.85, 0.6, 1.8);
+                const cockpitMat = new THREE.MeshStandardMaterial({
+                    color: 0x22d3ee,
+                    emissive: 0x0891b2,
+                    emissiveIntensity: 0.6,
+                    roughness: 0.1,
+                    metalness: 0.9
+                });
+                const cockpit = new THREE.Mesh(cockpitGeo, cockpitMat);
+                cockpit.position.set(0, 0.32, -0.15);
+                group.add(cockpit);
+
+                // Swept Main Wings
+                const wingGeo = new THREE.BoxGeometry(4.4, 0.14, 1.35);
+                const wingMat = new THREE.MeshStandardMaterial({
+                    color: 0x2563eb,
+                    emissive: 0x1e3a8a,
+                    emissiveIntensity: 0.25,
+                    metalness: 0.5,
+                    roughness: 0.35
+                });
+                const wings = new THREE.Mesh(wingGeo, wingMat);
+                wings.position.set(0, -0.05, 0.45);
+                group.add(wings);
+
+                // Wingtip Accent Fins
+                const finGeo = new THREE.BoxGeometry(0.14, 0.85, 1.2);
+                const finMat = new THREE.MeshStandardMaterial({
+                    color: 0x7c3aed,
+                    emissive: 0x4c1d95,
+                    emissiveIntensity: 0.4
+                });
+                const leftFin = new THREE.Mesh(finGeo, finMat);
+                leftFin.position.set(-2.15, 0.2, 0.55);
+                leftFin.rotation.z = 0.25;
+                const rightFin = new THREE.Mesh(finGeo, finMat);
+                rightFin.position.set(2.15, 0.2, 0.55);
+                rightFin.rotation.z = -0.25;
+                group.add(leftFin, rightFin);
+
+                // Dual Laser Cannons
+                const cannonGeo = new THREE.CylinderGeometry(0.09, 0.09, 1.6, 8);
+                cannonGeo.rotateX(Math.PI / 2);
+                const cannonMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
+                const leftCannon = new THREE.Mesh(cannonGeo, cannonMat);
+                leftCannon.position.set(-1.35, -0.12, -0.4);
+                const rightCannon = new THREE.Mesh(cannonGeo, cannonMat);
+                rightCannon.position.set(1.35, -0.12, -0.4);
+                group.add(leftCannon, rightCannon);
+
+                // Glowing Engine Thruster Flame
+                const thrusterGeo = new THREE.ConeGeometry(0.45, 1.4, 12);
+                thrusterGeo.rotateX(-Math.PI / 2);
+                const thrusterMat = new THREE.MeshBasicMaterial({
+                    color: 0x22d3ee,
+                    transparent: true,
+                    opacity: 0.85
+                });
+                const thruster = new THREE.Mesh(thrusterGeo, thrusterMat);
+                thruster.position.set(0, 0, 2.3);
+                group.add(thruster);
+
+                // Energy Shield Sphere (Flashes when hit)
+                const shieldGeo = new THREE.SphereGeometry(2.5, 16, 12);
+                const shieldMat = new THREE.MeshBasicMaterial({
+                    color: 0x22d3ee,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.0
+                });
+                const shield = new THREE.Mesh(shieldGeo, shieldMat);
+                group.add(shield);
+
+                // Aiming Reticle Ahead of Ship
+                const reticleGeo = new THREE.RingGeometry(0.45, 0.58, 16);
+                const reticleMat = new THREE.MeshBasicMaterial({
+                    color: 0x22d3ee,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.45
+                });
+                const reticle = new THREE.Mesh(reticleGeo, reticleMat);
+                reticle.position.set(0, 0, -28);
+                group.add(reticle);
+
+                return { group, thruster, shield, reticle };
+            }
+
+            static createAsteroidMesh() {
+                const geo = new THREE.DodecahedronGeometry(1.0, 1);
+                // Perturb vertices slightly for organic rocky asteroid silhouette
+                const pos = geo.attributes.position;
+                for (let i = 0; i < pos.count; i++) {
+                    const vx = pos.getX(i);
+                    const vy = pos.getY(i);
+                    const vz = pos.getZ(i);
+                    const noise = 0.84 + ((i * 7) % 10) * 0.032;
+                    pos.setXYZ(i, vx * noise, vy * noise, vz * noise);
+                }
+                geo.computeVertexNormals();
+
+                const mat = new THREE.MeshStandardMaterial({
+                    color: 0x64748b,
+                    roughness: 0.85,
+                    metalness: 0.15,
+                    flatShading: true
+                });
+                return new THREE.Mesh(geo, mat);
+            }
+
+            static createEnemyMesh() {
+                const group = new THREE.Group();
+
+                // Core Hull
+                const hullGeo = new THREE.OctahedronGeometry(1.1, 0);
+                const hullMat = new THREE.MeshStandardMaterial({
+                    color: 0xef4444,
+                    emissive: 0x7f1d1d,
+                    emissiveIntensity: 0.45,
+                    roughness: 0.3,
+                    metalness: 0.6,
+                    flatShading: true
+                });
+                const hull = new THREE.Mesh(hullGeo, hullMat);
+                group.add(hull);
+
+                // Aggressive Forward Wings
+                const wingGeo = new THREE.BoxGeometry(3.2, 0.18, 1.2);
+                const wingMat = new THREE.MeshStandardMaterial({
+                    color: 0x1e293b,
+                    metalness: 0.8,
+                    roughness: 0.2
+                });
+                const wing = new THREE.Mesh(wingGeo, wingMat);
+                group.add(wing);
+
+                return { group, hullMat, wing };
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 6. MAIN GAME ENGINE & CONTROLLER (PRD Section 7.2 & 7.3)
+         * ============================================================================
+         */
+        class SpaceShooterGame {
+            constructor() {
+                this.storage = new StorageManager();
+                this.audio = new AudioManager(this.storage);
+                this.state = GAME_STATE.LOADING;
+
+                // Gameplay Statistics & Progression
+                this.score = 0;
+                this.level = 1;
+                this.hp = GAME_CONFIG.PLAYER.MAX_HP;
+                this.invulnerableTimer = 0;
+                this.laserCooldownTimer = 0;
+                this.asteroidSpawnTimer = 0;
+                this.enemySpawnTimer = 0;
+                this.screenShakeTimer = 0;
+                this.bossActive = null;
+                this.bossSpawnedForLevel = {};
+
+                // Input State
+                this.keys = {
+                    up: false,
+                    down: false,
+                    left: false,
+                    right: false,
+                    shoot: false
+                };
+
+                // Initialize Three.js Scene, Pools, UI, and Listeners
+                this.initThreeScene();
+                this.initObjectPools();
+                this.initInputListeners();
+                this.initUIListeners();
+                this.syncSettingsUI();
+
+                // Simulate Asset Readiness & Transition to Main Menu
+                this.runLoadingSequence();
+
+                // Start Main Game Loop
+                this.clock = new THREE.Clock();
+                this.animate = this.animate.bind(this);
+                requestAnimationFrame(this.animate);
+            }
+
+            /**
+             * Initialize Three.js Scene, Camera, Renderer, Lights, Starfield & Decorative Planets
+             */
+            initThreeScene() {
+                this.container = document.getElementById('game-canvas-container');
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x050816);
+                this.scene.fog = new THREE.FogExp2(0x050816, 0.0075);
+
+                this.camera = new THREE.PerspectiveCamera(
+                    60,
+                    window.innerWidth / window.innerHeight,
+                    0.1,
+                    400
+                );
+                this.camera.position.set(0, 3.8, 11.5);
+
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                // PRD 6.1: Cap pixel ratio for high-DPI performance
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.container.appendChild(this.renderer.domElement);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+                this.scene.add(ambientLight);
+
+                this.dirLight = new THREE.DirectionalLight(0x22d3ee, 1.3);
+                this.dirLight.position.set(18, 30, 22);
+                this.scene.add(this.dirLight);
+
+                this.backLight = new THREE.PointLight(0x7c3aed, 1.8, 90);
+                this.backLight.position.set(0, -10, -40);
+                this.scene.add(this.backLight);
+
+                // Create Player Spaceship
+                this.playerModel = ModelFactory.createPlayerShip();
+                this.playerMesh = this.playerModel.group;
+                this.scene.add(this.playerMesh);
+
+                // Create 3D Starfield & Nebula Dust (FR-19)
+                this.createStarfield();
+
+                // Create Decorative Ringed Planet for Planetary Zone (FR-15)
+                this.createDecorativePlanets();
+
+                // Create Subtle Arena Boundary Corridor Grid
+                this.createArenaCorridor();
+
+                // Responsive Viewport Resize (NFR-05)
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+
+            createStarfield() {
+                const starCount = 1400;
+                const geo = new THREE.BufferGeometry();
+                const positions = new Float32Array(starCount * 3);
+                const colors = new Float32Array(starCount * 3);
+
+                for (let i = 0; i < starCount; i++) {
+                    positions[i * 3] = (Math.random() - 0.5) * 180;
+                    positions[i * 3 + 1] = (Math.random() - 0.5) * 110;
+                    positions[i * 3 + 2] = -Math.random() * 200 + 20;
+
+                    const tint = Math.random();
+                    if (tint > 0.7) {
+                        colors[i * 3] = 0.13; colors[i * 3 + 1] = 0.83; colors[i * 3 + 2] = 0.93; // Cyan
+                    } else if (tint > 0.4) {
+                        colors[i * 3] = 0.48; colors[i * 3 + 1] = 0.23; colors[i * 3 + 2] = 0.93; // Purple
+                    } else {
+                        colors[i * 3] = 0.97; colors[i * 3 + 1] = 0.98; colors[i * 3 + 2] = 1.0;  // White
+                    }
+                }
+
+                geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+                const mat = new THREE.PointsMaterial({
+                    size: 0.48,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.9
+                });
+
+                this.starField = new THREE.Points(geo, mat);
+                this.scene.add(this.starField);
+            }
+
+            createDecorativePlanets() {
+                this.planetGroup = new THREE.Group();
+
+                // Giant Gas Planet
+                const planetGeo = new THREE.SphereGeometry(22, 24, 24);
+                const planetMat = new THREE.MeshStandardMaterial({
+                    color: 0x4f46e5,
+                    emissive: 0x1e1b4b,
+                    emissiveIntensity: 0.4,
+                    roughness: 0.7
+                });
+                const planet = new THREE.Mesh(planetGeo, planetMat);
+                this.planetGroup.add(planet);
+
+                // Planetary Rings
+                const ringGeo = new THREE.RingGeometry(28, 42, 36);
+                ringGeo.rotateX(Math.PI / 2.4);
+                const ringMat = new THREE.MeshBasicMaterial({
+                    color: 0x22d3ee,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.32
+                });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                this.planetGroup.add(ring);
+
+                this.planetGroup.position.set(-48, 22, -165);
+                this.planetGroup.visible = false;
+                this.scene.add(this.planetGroup);
+            }
+
+            createArenaCorridor() {
+                // Subtle corner guide lines so the player perceives depth and arena bounds
+                const material = new THREE.LineBasicMaterial({
+                    color: 0x22d3ee,
+                    transparent: true,
+                    opacity: 0.12
+                });
+                const bx = GAME_CONFIG.PLAYER.BOUNDS_X + 2;
+                const byMin = GAME_CONFIG.PLAYER.BOUNDS_Y_MIN - 1.5;
+                const byMax = GAME_CONFIG.PLAYER.BOUNDS_Y_MAX + 1.5;
+
+                const corners = [
+                    [-bx, byMin], [bx, byMin], [bx, byMax], [-bx, byMax]
+                ];
+
+                corners.forEach(([cx, cy]) => {
+                    const points = [
+                        new THREE.Vector3(cx, cy, 10),
+                        new THREE.Vector3(cx, cy, -140)
+                    ];
+                    const geo = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(geo, material);
+                    this.scene.add(line);
+                });
+            }
+
+            /**
+             * Initialize Object Pools for Lasers, Enemy Projectiles, Asteroids, Enemies, and Explosion Particles
+             */
+            initObjectPools() {
+                // 1. Player Laser Pool
+                this.laserPool = new ObjectPool(() => {
+                    const group = new THREE.Group();
+                    const beamGeo = new THREE.CylinderGeometry(0.11, 0.11, 2.6, 6);
+                    beamGeo.rotateX(Math.PI / 2);
+                    const beamMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee });
+
+                    const leftBeam = new THREE.Mesh(beamGeo, beamMat);
+                    leftBeam.position.x = -1.25;
+                    const rightBeam = new THREE.Mesh(beamGeo, beamMat);
+                    rightBeam.position.x = 1.25;
+                    group.add(leftBeam, rightBeam);
+
+                    this.scene.add(group);
+                    return { mesh: group, active: false, radius: 1.4 };
+                }, 25);
+
+                // 2. Enemy Projectile Pool
+                this.enemyProjectilePool = new ObjectPool(() => {
+                    const geo = new THREE.SphereGeometry(0.42, 8, 8);
+                    const mat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+                    const mesh = new THREE.Mesh(geo, mat);
+                    this.scene.add(mesh);
+                    return { mesh, active: false, velocity: new THREE.Vector3(), radius: 0.55 };
+                }, 35);
+
+                // 3. Asteroid Pool
+                this.asteroidPool = new ObjectPool(() => {
+                    const mesh = ModelFactory.createAsteroidMesh();
+                    this.scene.add(mesh);
+                    return {
+                        mesh,
+                        active: false,
+                        hp: 25,
+                        maxHp: 25,
+                        points: 10,
+                        radius: 1.5,
+                        speed: 20,
+                        rotSpeed: new THREE.Vector3(),
+                        flashTimer: 0
+                    };
+                }, 30);
+
+                // 4. Enemy Ship Pool
+                this.enemyPool = new ObjectPool(() => {
+                    const model = ModelFactory.createEnemyMesh();
+                    this.scene.add(model.group);
+                    return {
+                        mesh: model.group,
+                        hullMat: model.hullMat,
+                        wing: model.wing,
+                        active: false,
+                        type: 'SCOUT',
+                        hp: 25,
+                        maxHp: 25,
+                        points: 50,
+                        radius: 1.8,
+                        speed: 18,
+                        shootTimer: 1.5,
+                        baseX: 0,
+                        age: 0,
+                        flashTimer: 0,
+                        baseColor: 0xef4444
+                    };
+                }, 20);
+
+                // 5. Explosion Particle Pool
+                this.particlePool = new ObjectPool(() => {
+                    const geo = new THREE.DodecahedronGeometry(0.28, 0);
+                    const mat = new THREE.MeshBasicMaterial({
+                        color: 0xf59e0b,
+                        transparent: true,
+                        opacity: 1
+                    });
+                    const mesh = new THREE.Mesh(geo, mat);
+                    this.scene.add(mesh);
+                    return {
+                        mesh,
+                        mat,
+                        active: false,
+                        velocity: new THREE.Vector3(),
+                        life: 0,
+                        maxLife: 0.6
+                    };
+                }, 120);
+            }
+
+            /**
+             * Keyboard & Touch Input System (PRD Section 5.4)
+             */
+            initInputListeners() {
+                window.addEventListener('keydown', (e) => {
+                    // Prevent page scrolling when Space or Arrow keys are used
+                    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                        if (this.state === GAME_STATE.PLAYING || this.state === GAME_STATE.PAUSED) {
+                            e.preventDefault();
+                        }
+                    }
+
+                    if (e.code === 'KeyW' || e.code === 'ArrowUp') this.keys.up = true;
+                    if (e.code === 'KeyS' || e.code === 'ArrowDown') this.keys.down = true;
+                    if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.keys.left = true;
+                    if (e.code === 'KeyD' || e.code === 'ArrowRight') this.keys.right = true;
+                    if (e.code === 'Space') this.keys.shoot = true;
+
+                    // Escape / P for Pause & Resume (FR-17)
+                    if ((e.code === 'Escape' || e.code === 'KeyP') && !e.repeat) {
+                        if (this.state === GAME_STATE.PLAYING) {
+                            this.pauseGame();
+                        } else if (this.state === GAME_STATE.PAUSED) {
+                            this.resumeGame();
+                        }
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    if (e.code === 'KeyW' || e.code === 'ArrowUp') this.keys.up = false;
+                    if (e.code === 'KeyS' || e.code === 'ArrowDown') this.keys.down = false;
+                    if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.keys.left = false;
+                    if (e.code === 'KeyD' || e.code === 'ArrowRight') this.keys.right = false;
+                    if (e.code === 'Space') this.keys.shoot = false;
+                });
+
+                // Clear held keys if window loses focus (PRD 5.4 requirement)
+                window.addEventListener('blur', () => {
+                    this.clearKeys();
+                });
+
+                // Touch D-Pad & Fire Button Support for Tablet/Mobile
+                document.querySelectorAll('[data-touch-dir]').forEach((btn) => {
+                    const dir = btn.getAttribute('data-touch-dir');
+                    const setDir = (val) => { this.keys[dir] = val; };
+                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); setDir(true); });
+                    btn.addEventListener('touchend', (e) => { e.preventDefault(); setDir(false); });
+                    btn.addEventListener('mousedown', () => setDir(true));
+                    btn.addEventListener('mouseup', () => setDir(false));
+                    btn.addEventListener('mouseleave', () => setDir(false));
+                });
+
+                const touchFireBtn = document.getElementById('btn-touch-fire');
+                if (touchFireBtn) {
+                    touchFireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); this.keys.shoot = true; });
+                    touchFireBtn.addEventListener('touchend', (e) => { e.preventDefault(); this.keys.shoot = false; });
+                    touchFireBtn.addEventListener('mousedown', () => { this.keys.shoot = true; });
+                    touchFireBtn.addEventListener('mouseup', () => { this.keys.shoot = false; });
+                }
+            }
+
+            clearKeys() {
+                this.keys.up = false;
+                this.keys.down = false;
+                this.keys.left = false;
+                this.keys.right = false;
+                this.keys.shoot = false;
+            }
+
+            /**
+             * UI Buttons, Modals, Settings, and Leaderboard Listeners
+             */
+            initUIListeners() {
+                const bindBtn = (id, fn) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.addEventListener('click', () => {
+                            this.audio.playUIClick();
+                            fn();
+                        });
+                    }
+                };
+
+                // Main Menu Buttons
+                bindBtn('btn-start-game', () => this.startNewGame());
+                bindBtn('btn-how-to-play', () => this.openModal('modal-howtoplay'));
+                bindBtn('btn-leaderboard', () => {
+                    this.renderLeaderboard();
+                    this.openModal('modal-leaderboard');
+                });
+                bindBtn('btn-settings-menu', () => this.openModal('modal-settings'));
+
+                // HUD Pause Button
+                bindBtn('btn-hud-pause', () => this.pauseGame());
+
+                // Pause Menu Buttons
+                bindBtn('btn-pause-resume', () => this.resumeGame());
+                bindBtn('btn-pause-restart', () => this.startNewGame());
+                bindBtn('btn-pause-settings', () => this.openModal('modal-settings'));
+                bindBtn('btn-pause-menu', () => this.returnToMainMenu());
+
+                // Game Over Buttons
+                bindBtn('btn-gameover-restart', () => this.startNewGame());
+                bindBtn('btn-gameover-menu', () => this.returnToMainMenu());
+                bindBtn('btn-save-score', () => {
+                    const nameInput = document.getElementById('player-name-input');
+                    const feedback = document.getElementById('save-score-feedback');
+                    const saveBtn = document.getElementById('btn-save-score');
+                    this.storage.addLeaderboardEntry(nameInput.value, this.score, this.level);
+                    feedback.classList.remove('hidden');
+                    saveBtn.disabled = true;
+                    saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    this.updateHighScoreDisplays();
+                });
+
+                // Close Modal Buttons
+                document.querySelectorAll('[data-close-modal]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        this.audio.playUIClick();
+                        const modalId = btn.getAttribute('data-close-modal');
+                        document.getElementById(modalId).classList.add('hidden');
+                        document.getElementById(modalId).classList.remove('flex');
+                    });
+                });
+
+                // Leaderboard Reset Data Flow (Custom inline confirmation)
+                bindBtn('btn-trigger-reset', () => {
+                    document.getElementById('reset-confirm-box').classList.remove('hidden');
+                });
+                bindBtn('btn-confirm-reset-no', () => {
+                    document.getElementById('reset-confirm-box').classList.add('hidden');
+                });
+                bindBtn('btn-confirm-reset-yes', () => {
+                    this.storage.resetLeaderboard();
+                    document.getElementById('reset-confirm-box').classList.add('hidden');
+                    this.renderLeaderboard();
+                    this.updateHighScoreDisplays();
+                });
+
+                // Settings Controls (FR-18)
+                const toggleMusicBtn = document.getElementById('toggle-music');
+                const toggleSfxBtn = document.getElementById('toggle-sfx');
+                const sliderMusic = document.getElementById('slider-music-vol');
+                const sliderSfx = document.getElementById('slider-sfx-vol');
+                const sliderSens = document.getElementById('slider-sensitivity');
+
+                toggleMusicBtn.addEventListener('click', () => {
+                    this.storage.data.settings.musicEnabled = !this.storage.data.settings.musicEnabled;
+                    this.storage.save();
+                    this.syncSettingsUI();
+                    this.audio.playUIClick();
+                });
+
+                toggleSfxBtn.addEventListener('click', () => {
+                    this.storage.data.settings.sfxEnabled = !this.storage.data.settings.sfxEnabled;
+                    this.storage.save();
+                    this.syncSettingsUI();
+                    this.audio.playUIClick();
+                });
+
+                sliderMusic.addEventListener('input', (e) => {
+                    this.storage.data.settings.musicVolume = parseInt(e.target.value, 10) / 100;
+                    this.storage.save();
+                    this.syncSettingsUI();
+                });
+
+                sliderSfx.addEventListener('input', (e) => {
+                    this.storage.data.settings.sfxVolume = parseInt(e.target.value, 10) / 100;
+                    this.storage.save();
+                    this.syncSettingsUI();
+                });
+
+                sliderSens.addEventListener('input', (e) => {
+                    this.storage.data.settings.sensitivity = parseInt(e.target.value, 10) / 100;
+                    this.storage.save();
+                    this.syncSettingsUI();
+                });
+            }
+
+            syncSettingsUI() {
+                const s = this.storage.data.settings;
+                const toggleMusicBtn = document.getElementById('toggle-music');
+                const toggleSfxBtn = document.getElementById('toggle-sfx');
+
+                toggleMusicBtn.textContent = s.musicEnabled ? 'ON' : 'OFF';
+                toggleMusicBtn.className = s.musicEnabled
+                    ? 'px-3.5 py-1 rounded-full text-xs font-orbitron font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    : 'px-3.5 py-1 rounded-full text-xs font-orbitron font-bold bg-slate-800 text-slate-400 border border-slate-700';
+
+                toggleSfxBtn.textContent = s.sfxEnabled ? 'ON' : 'OFF';
+                toggleSfxBtn.className = s.sfxEnabled
+                    ? 'px-3.5 py-1 rounded-full text-xs font-orbitron font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    : 'px-3.5 py-1 rounded-full text-xs font-orbitron font-bold bg-slate-800 text-slate-400 border border-slate-700';
+
+                document.getElementById('slider-music-vol').value = Math.round(s.musicVolume * 100);
+                document.getElementById('label-music-vol').textContent = `${Math.round(s.musicVolume * 100)}%`;
+
+                document.getElementById('slider-sfx-vol').value = Math.round(s.sfxVolume * 100);
+                document.getElementById('label-sfx-vol').textContent = `${Math.round(s.sfxVolume * 100)}%`;
+
+                document.getElementById('slider-sensitivity').value = Math.round((s.sensitivity || 1) * 100);
+                document.getElementById('label-sensitivity').textContent = `${Math.round((s.sensitivity || 1) * 100)}%`;
+            }
+
+            openModal(id) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                }
+            }
+
+            renderLeaderboard() {
+                const tbody = document.getElementById('leaderboard-tbody');
+                const entries = this.storage.data.leaderboard;
+                if (!entries || entries.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-slate-500">Belum ada rekor tersimpan. Jadilah pilot pertama!</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = entries.map((item, idx) => {
+                    const badgeColor = idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-slate-200 font-bold' : idx === 2 ? 'text-amber-600 font-bold' : 'text-slate-400';
+                    return `
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="py-2.5 px-3 font-orbitron ${badgeColor}">${idx + 1}</td>
+                            <td class="py-2.5 px-3 font-medium text-white">${this.escapeHtml(item.name)}</td>
+                            <td class="py-2.5 px-3 text-right font-orbitron text-cyan-300 font-bold">${item.score.toLocaleString()}</td>
+                            <td class="py-2.5 px-3 text-center text-purple-300">Lv.${item.level}</td>
+                            <td class="py-2.5 px-3 text-right text-slate-400 text-xs">${item.date}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            escapeHtml(str) {
+                return String(str).replace(/[&<>"']/g, (m) => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                })[m]);
+            }
+
+            /**
+             * ============================================================================
+             * 7. STATE TRANSITIONS (LOADING -> MENU -> PLAYING -> PAUSED -> GAME_OVER)
+             * ============================================================================
+             */
+            runLoadingSequence() {
+                const fill = document.getElementById('loading-bar-fill');
+                const loadingScreen = document.getElementById('screen-loading');
+                this.updateHighScoreDisplays();
+
+                setTimeout(() => { fill.style.width = '55%'; }, 100);
+                setTimeout(() => { fill.style.width = '100%'; }, 350);
+                setTimeout(() => {
+                    loadingScreen.classList.add('opacity-0', 'pointer-events-none');
+                    setTimeout(() => { loadingScreen.classList.add('hidden'); }, 500);
+                    this.returnToMainMenu();
+                }, 650);
+            }
+
+            hideAllScreens() {
+                ['screen-menu', 'screen-hud', 'screen-pause', 'screen-gameover'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                });
+            }
+
+            returnToMainMenu() {
+                this.state = GAME_STATE.MENU;
+                this.clearKeys();
+                this.clearAllEntities();
+                this.applyEnvironmentTheme(1);
+
+                // Position ship as a 3D decorative showcase on the right side of the Main Menu (FR-16)
+                this.playerMesh.visible = true;
+                this.playerModel.reticle.visible = false;
+                this.playerMesh.position.set(3.2, 0.2, 4.5);
+                this.playerMesh.rotation.set(0.15, -0.55, 0.1);
+                this.camera.position.set(0, 1.5, 11);
+                this.camera.lookAt(1.2, 0.2, 0);
+
+                this.hideAllScreens();
+                const menu = document.getElementById('screen-menu');
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+                this.updateHighScoreDisplays();
+            }
+
+            startNewGame() {
+                this.audio.initContext();
+                this.audio.startMusic();
+
+                // Reset Gameplay Variables (FR-09 Fast Restart)
+                this.score = 0;
+                this.level = 1;
+                this.hp = GAME_CONFIG.PLAYER.MAX_HP;
+                this.invulnerableTimer = 0;
+                this.laserCooldownTimer = 0;
+                this.asteroidSpawnTimer = 0.6;
+                this.enemySpawnTimer = 2.5;
+                this.bossActive = null;
+                this.bossSpawnedForLevel = {};
+                this.clearKeys();
+                this.clearAllEntities();
+
+                // Reset Player Position & Reticle
+                this.playerMesh.visible = true;
+                this.playerModel.reticle.visible = true;
+                this.playerModel.shield.material.opacity = 0;
+                this.playerMesh.position.set(0, 0, 0);
+                this.playerMesh.rotation.set(0, 0, 0);
+
+                // Apply Level 1 Theme
+                this.applyEnvironmentTheme(1);
+
+                // Show HUD
+                this.hideAllScreens();
+                const hud = document.getElementById('screen-hud');
+                hud.classList.remove('hidden');
+                hud.classList.add('flex');
+                document.getElementById('hud-boss-container').classList.add('hidden');
+
+                this.updateHUD();
+                this.state = GAME_STATE.PLAYING;
+            }
+
+            pauseGame() {
+                if (this.state !== GAME_STATE.PLAYING) return;
+                this.state = GAME_STATE.PAUSED;
+                this.clearKeys();
+                const pauseScreen = document.getElementById('screen-pause');
+                pauseScreen.classList.remove('hidden');
+                pauseScreen.classList.add('flex');
+            }
+
+            resumeGame() {
+                if (this.state !== GAME_STATE.PAUSED) return;
+                const pauseScreen = document.getElementById('screen-pause');
+                pauseScreen.classList.add('hidden');
+                pauseScreen.classList.remove('flex');
+                this.clock.getDelta(); // Discard paused elapsed delta
+                this.state = GAME_STATE.PLAYING;
+            }
+
+            triggerGameOver() {
+                this.state = GAME_STATE.GAME_OVER;
+                this.clearKeys();
+                this.audio.playExplosion(true);
+                this.audio.playGameOver();
+
+                // Spawn dramatic explosion at player ship location
+                this.spawnExplosion(this.playerMesh.position, 0xef4444, 35);
+                this.playerMesh.visible = false;
+
+                const isNewRecord = this.storage.updateHighScore(this.score);
+
+                // Populate Game Over UI (FR-08)
+                document.getElementById('gameover-score').textContent = this.score.toLocaleString();
+                document.getElementById('gameover-level').textContent = this.level;
+                document.getElementById('gameover-best').textContent = this.storage.data.highScore.toLocaleString();
+
+                const recordBadge = document.getElementById('gameover-new-record');
+                if (isNewRecord && this.score > 0) {
+                    recordBadge.classList.remove('hidden');
+                } else {
+                    recordBadge.classList.add('hidden');
+                }
+
+                // Reset Save Score UI
+                const saveBtn = document.getElementById('btn-save-score');
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('save-score-feedback').classList.add('hidden');
+
+                this.updateHighScoreDisplays();
+
+                const goScreen = document.getElementById('screen-gameover');
+                goScreen.classList.remove('hidden');
+                goScreen.classList.add('flex');
+            }
+
+            clearAllEntities() {
+                this.laserPool.releaseAll();
+                this.enemyProjectilePool.releaseAll();
+                this.asteroidPool.releaseAll();
+                this.enemyPool.releaseAll();
+                this.particlePool.releaseAll();
+                document.getElementById('popups-container').innerHTML = '';
+            }
+
+            /**
+             * ============================================================================
+             * 8. LEVEL PROGRESSION & ENVIRONMENT THEMES (FR-13, FR-14, FR-15)
+             * ============================================================================
+             */
+            getLevelConfig(lvl) {
+                if (lvl <= GAME_CONFIG.LEVELS.length) {
+                    return GAME_CONFIG.LEVELS[lvl - 1];
+                }
+                // Dynamic scaling for Levels 6+ with fair maximum difficulty cap (FR-14)
+                const extra = lvl - GAME_CONFIG.LEVELS.length;
+                const themeCycle = GAME_CONFIG.LEVELS[(lvl - 1) % GAME_CONFIG.LEVELS.length];
+                return {
+                    level: lvl,
+                    targetScore: 1000 + extra * 450,
+                    name: `${themeCycle.name} II`,
+                    bgHex: themeCycle.bgHex,
+                    fogHex: themeCycle.fogHex,
+                    accentHex: themeCycle.accentHex,
+                    speedMult: Math.min(2.15, 1.6 + extra * 0.1),
+                    spawnMult: Math.min(2.3, 1.65 + extra * 0.12),
+                    showPlanet: true
+                };
+            }
+
+            applyEnvironmentTheme(lvl) {
+                const cfg = this.getLevelConfig(lvl);
+                this.scene.background.setHex(cfg.bgHex);
+                this.scene.fog.color.setHex(cfg.fogHex);
+                this.dirLight.color.setHex(cfg.accentHex);
+                this.planetGroup.visible = cfg.showPlanet;
+                document.getElementById('hud-zone-name').textContent = cfg.name;
+            }
+
+            checkLevelProgression() {
+                const currentCfg = this.getLevelConfig(this.level);
+                if (this.score >= currentCfg.targetScore) {
+                    this.level++;
+                    const nextCfg = this.getLevelConfig(this.level);
+                    this.applyEnvironmentTheme(this.level);
+                    this.audio.playLevelUp();
+
+                    // Show Level Up Banner Notification (FR-13)
+                    const banner = document.getElementById('level-up-banner');
+                    document.getElementById('level-up-title').textContent = `LEVEL ${this.level} REACHED!`;
+                    document.getElementById('level-up-subtitle').textContent = `Entering Sector: ${nextCfg.name}`;
+                    banner.classList.remove('hidden', 'animate-level-up');
+                    void banner.offsetWidth; // Reflow to restart CSS animation
+                    banner.classList.add('animate-level-up');
+
+                    // Spawn Boss Ship on Level 5, 8, 11...
+                    if (this.level >= 5 && !this.bossActive && !this.bossSpawnedForLevel[this.level]) {
+                        this.bossSpawnedForLevel[this.level] = true;
+                        this.spawnEnemy('BOSS');
+                    }
+
+                    this.updateHUD();
+                }
+            }
+
+            /**
+             * ============================================================================
+             * 9. SPAWNING & ENTITY BEHAVIORS (Asteroids, Scout, Heavy, Drone, Boss)
+             * ============================================================================
+             */
+            spawnAsteroid() {
+                const ast = this.asteroidPool.acquire();
+                const cfg = this.getLevelConfig(this.level);
+
+                // Determine size variant (Small, Medium, Large) per FR-04 & FR-10
+                const roll = Math.random();
+                let scale = 1.1;
+                if (roll < 0.45) {
+                    // Small Asteroid (+10 pts)
+                    scale = 0.95;
+                    ast.hp = 25;
+                    ast.points = GAME_CONFIG.SCORES.ASTEROID_SMALL;
+                } else if (roll < 0.8) {
+                    // Medium Asteroid (+20 pts)
+                    scale = 1.55;
+                    ast.hp = 50;
+                    ast.points = GAME_CONFIG.SCORES.ASTEROID_MEDIUM;
+                } else {
+                    // Large Asteroid (+30 pts)
+                    scale = 2.35;
+                    ast.hp = 75;
+                    ast.points = GAME_CONFIG.SCORES.ASTEROID_LARGE;
+                }
+
+                ast.maxHp = ast.hp;
+                ast.radius = scale * 1.05;
+                ast.mesh.scale.setScalar(scale);
+                ast.mesh.material.emissive.setHex(0x000000);
+                ast.flashTimer = 0;
+
+                const bx = GAME_CONFIG.PLAYER.BOUNDS_X;
+                const byMin = GAME_CONFIG.PLAYER.BOUNDS_Y_MIN;
+                const byMax = GAME_CONFIG.PLAYER.BOUNDS_Y_MAX;
+
+                ast.mesh.position.set(
+                    (Math.random() * 2 - 1) * bx,
+                    byMin + Math.random() * (byMax - byMin),
+                    GAME_CONFIG.SPAWN.SPAWN_Z
+                );
+
+                ast.speed = (22 + Math.random() * 14) * cfg.speedMult;
+                ast.rotSpeed.set(
+                    (Math.random() - 0.5) * 2.5,
+                    (Math.random() - 0.5) * 2.5,
+                    (Math.random() - 0.5) * 2.5
+                );
+            }
+
+            spawnEnemy(forcedType = null) {
+                const cfg = this.getLevelConfig(this.level);
+                let type = forcedType;
+
+                if (!type) {
+                    const roll = Math.random();
+                    if (this.level >= 3 && roll < 0.28) {
+                        type = 'HEAVY';
+                    } else if (this.level >= 2 && roll < 0.62) {
+                        type = 'DRONE_SWARM';
+                    } else {
+                        type = 'SCOUT';
+                    }
+                }
+
+                if (type === 'DRONE_SWARM') {
+                    // Alien Drone spawns in groups of 3 (PRD 9.2)
+                    const baseX = (Math.random() * 2 - 1) * (GAME_CONFIG.PLAYER.BOUNDS_X - 5);
+                    const baseY = (Math.random() * 2 - 1) * 5;
+                    for (let i = -1; i <= 1; i++) {
+                        this.configureSingleEnemy('DRONE', baseX + i * 3.2, baseY, GAME_CONFIG.SPAWN.SPAWN_Z - Math.abs(i) * 5, cfg);
+                    }
+                } else {
+                    const x = (Math.random() * 2 - 1) * (GAME_CONFIG.PLAYER.BOUNDS_X - 3);
+                    const y = (Math.random() * 2 - 1) * 6;
+                    this.configureSingleEnemy(type, x, y, GAME_CONFIG.SPAWN.SPAWN_Z, cfg);
+                }
+            }
+
+            configureSingleEnemy(type, x, y, z, cfg) {
+                const enemy = this.enemyPool.acquire();
+                enemy.type = type;
+                enemy.baseX = x;
+                enemy.age = 0;
+                enemy.flashTimer = 0;
+                enemy.mesh.position.set(x, y, z);
+                enemy.mesh.rotation.set(0, 0, 0);
+
+                if (type === 'SCOUT') {
+                    // Scout Fighter: fast, low HP (25 HP), +50 pts
+                    enemy.hp = 25;
+                    enemy.maxHp = 25;
+                    enemy.points = GAME_CONFIG.SCORES.ENEMY_SCOUT;
+                    enemy.speed = 25 * cfg.speedMult;
+                    enemy.radius = 1.6;
+                    enemy.shootTimer = 1.2 + Math.random();
+                    enemy.baseColor = 0xef4444;
+                    enemy.mesh.scale.set(1, 1, 1);
+                } else if (type === 'DRONE') {
+                    // Alien Drone: small, weaving swarm, 25 HP, +50 pts
+                    enemy.hp = 25;
+                    enemy.maxHp = 25;
+                    enemy.points = GAME_CONFIG.SCORES.ENEMY_DRONE;
+                    enemy.speed = 23 * cfg.speedMult;
+                    enemy.radius = 1.3;
+                    enemy.shootTimer = 1.6 + Math.random();
+                    enemy.baseColor = 0x22c55e;
+                    enemy.mesh.scale.set(0.8, 0.8, 0.8);
+                } else if (type === 'HEAVY') {
+                    // Heavy Fighter: high HP (75 HP), slower, aimed twin shots, +100 pts
+                    enemy.hp = 75;
+                    enemy.maxHp = 75;
+                    enemy.points = GAME_CONFIG.SCORES.ENEMY_HEAVY;
+                    enemy.speed = 15 * cfg.speedMult;
+                    enemy.radius = 2.4;
+                    enemy.shootTimer = 1.3;
+                    enemy.baseColor = 0xa855f7;
+                    enemy.mesh.scale.set(1.55, 1.4, 1.55);
+                } else if (type === 'BOSS') {
+                    // Boss Ship: huge, 250+ HP, multi-laser pattern, +500 pts
+                    const bossHp = 250 + Math.max(0, this.level - 5) * 75;
+                    enemy.hp = bossHp;
+                    enemy.maxHp = bossHp;
+                    enemy.points = GAME_CONFIG.SCORES.ENEMY_BOSS;
+                    enemy.speed = 14;
+                    enemy.radius = 4.6;
+                    enemy.shootTimer = 1.5;
+                    enemy.baseColor = 0xf59e0b;
+                    enemy.mesh.scale.set(3.4, 2.8, 3.2);
+                    enemy.mesh.position.set(0, 2, GAME_CONFIG.SPAWN.SPAWN_Z);
+                    this.bossActive = enemy;
+                    this.updateBossHUD();
+                }
+
+                enemy.hullMat.color.setHex(enemy.baseColor);
+                enemy.hullMat.emissive.setHex(enemy.baseColor);
+                enemy.hullMat.emissiveIntensity = 0.35;
+            }
+
+            firePlayerLaser() {
+                const laser = this.laserPool.acquire();
+                laser.mesh.position.copy(this.playerMesh.position);
+                laser.mesh.position.z -= 1.8;
+                this.audio.playLaser();
+            }
+
+            fireEnemyProjectile(enemy) {
+                if (enemy.type === 'BOSS') {
+                    // Boss multi-laser spread (3 projectiles)
+                    for (let i = -1; i <= 1; i++) {
+                        const proj = this.enemyProjectilePool.acquire();
+                        proj.mesh.position.copy(enemy.mesh.position);
+                        proj.mesh.position.x += i * 2.5;
+                        const dir = new THREE.Vector3()
+                            .subVectors(this.playerMesh.position, proj.mesh.position)
+                            .normalize();
+                        proj.velocity.copy(dir).multiplyScalar(42);
+                    }
+                    this.audio.playEnemyLaser();
+                } else {
+                    const proj = this.enemyProjectilePool.acquire();
+                    proj.mesh.position.copy(enemy.mesh.position);
+                    proj.mesh.position.z += 1.5;
+
+                    if (enemy.type === 'HEAVY') {
+                        // Aimed projectile toward player
+                        const dir = new THREE.Vector3()
+                            .subVectors(this.playerMesh.position, proj.mesh.position)
+                            .normalize();
+                        proj.velocity.copy(dir).multiplyScalar(38);
+                    } else {
+                        // Straight projectile with slight convergence
+                        const dir = new THREE.Vector3(
+                            (this.playerMesh.position.x - proj.mesh.position.x) * 0.15,
+                            (this.playerMesh.position.y - proj.mesh.position.y) * 0.15,
+                            36
+                        ).normalize();
+                        proj.velocity.copy(dir).multiplyScalar(36);
+                    }
+                    this.audio.playEnemyLaser();
+                }
+            }
+
+            spawnExplosion(position, colorHex = 0xf59e0b, count = 18) {
+                for (let i = 0; i < count; i++) {
+                    const p = this.particlePool.acquire();
+                    p.mesh.position.copy(position);
+                    p.mat.color.setHex(i % 2 === 0 ? colorHex : 0xfef08a);
+                    p.mat.opacity = 1;
+                    p.life = 0;
+                    p.maxLife = 0.45 + Math.random() * 0.35;
+                    p.velocity.set(
+                        (Math.random() - 0.5) * 28,
+                        (Math.random() - 0.5) * 28,
+                        (Math.random() - 0.5) * 28
+                    );
+                }
+            }
+
+            spawnScorePopup(worldPos, points) {
+                const vector = worldPos.clone();
+                vector.project(this.camera);
+                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
+
+                const popup = document.createElement('div');
+                popup.className = 'score-popup text-cyan-300 text-sm sm:text-base glow-cyan';
+                popup.style.left = `${x}px`;
+                popup.style.top = `${y}px`;
+                popup.textContent = `+${points}`;
+
+                const container = document.getElementById('popups-container');
+                container.appendChild(popup);
+                setTimeout(() => { popup.remove(); }, 850);
+            }
+
+            /**
+             * ============================================================================
+             * 10. DAMAGE, HEALTH & HUD UPDATES (FR-07, FR-10)
+             * ============================================================================
+             */
+            damagePlayer(amount) {
+                if (this.invulnerableTimer > 0 || this.state !== GAME_STATE.PLAYING) return;
+
+                this.hp = Math.max(0, this.hp - amount);
+                this.invulnerableTimer = GAME_CONFIG.PLAYER.INVULNERABLE_TIME;
+                this.screenShakeTimer = 0.28;
+                this.playerModel.shield.material.opacity = 0.85;
+                this.audio.playHit();
+
+                // Flash red damage vignette
+                const overlay = document.getElementById('damage-overlay');
+                overlay.style.opacity = '1';
+                setTimeout(() => { overlay.style.opacity = '0'; }, 180);
+
+                this.updateHUD();
+
+                if (this.hp <= 0) {
+                    this.triggerGameOver();
+                }
+            }
+
+            addScore(points, worldPos = null) {
+                this.score += points;
+                if (worldPos) {
+                    this.spawnScorePopup(worldPos, points);
+                }
+                this.checkLevelProgression();
+                this.updateHUD();
+            }
+
+            updateHUD() {
+                // Health Bar & Dynamic Color Condition (FR-07)
+                const hpBar = document.getElementById('hud-hp-bar');
+                const hpText = document.getElementById('hud-hp-text');
+                const pct = Math.max(0, Math.min(100, (this.hp / GAME_CONFIG.PLAYER.MAX_HP) * 100));
+
+                hpBar.style.width = `${pct}%`;
+                hpText.textContent = `${this.hp} / ${GAME_CONFIG.PLAYER.MAX_HP}`;
+
+                if (pct > 60) {
+                    hpBar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-200';
+                    hpText.className = 'font-orbitron text-xs sm:text-sm font-extrabold text-emerald-400';
+                } else if (pct > 30) {
+                    hpBar.className = 'h-full bg-amber-400 rounded-full transition-all duration-200';
+                    hpText.className = 'font-orbitron text-xs sm:text-sm font-extrabold text-amber-400';
+                } else {
+                    hpBar.className = 'h-full bg-red-500 rounded-full transition-all duration-200 animate-pulse';
+                    hpText.className = 'font-orbitron text-xs sm:text-sm font-extrabold text-red-400';
+                }
+
+                // Score, Target & Level
+                const cfg = this.getLevelConfig(this.level);
+                document.getElementById('hud-score').textContent = this.score.toLocaleString();
+                document.getElementById('hud-target-score').textContent = cfg.targetScore.toLocaleString();
+                document.getElementById('hud-level').textContent = this.level;
+                const displayBest = Math.max(this.score, this.storage.data.highScore);
+                document.getElementById('hud-high-score').textContent = displayBest.toLocaleString();
+            }
+
+            updateBossHUD() {
+                const container = document.getElementById('hud-boss-container');
+                if (!this.bossActive || !this.bossActive.active) {
+                    container.classList.add('hidden');
+                    return;
+                }
+                container.classList.remove('hidden');
+                const pct = Math.max(0, (this.bossActive.hp / this.bossActive.maxHp) * 100);
+                document.getElementById('hud-boss-hp-bar').style.width = `${pct}%`;
+                document.getElementById('hud-boss-hp-text').textContent = `${Math.max(0, this.bossActive.hp)} HP`;
+            }
+
+            updateHighScoreDisplays() {
+                const best = this.storage.data.highScore.toLocaleString();
+                document.getElementById('menu-highscore').textContent = best;
+                document.getElementById('hud-high-score').textContent = best;
+            }
+
+            /**
+             * ============================================================================
+             * 11. CORE UPDATE LOOP (Delta-Time Movement, AI, Spawning, Collisions)
+             * ============================================================================
+             */
+            updateStarfield(dt, speedMult = 1.0) {
+                const pos = this.starField.geometry.attributes.position;
+                const starSpeed = 35 * speedMult;
+                for (let i = 0; i < pos.count; i++) {
+                    let z = pos.getZ(i) + starSpeed * dt;
+                    if (z > 20) z = -195;
+                    pos.setZ(i, z);
+                }
+                pos.needsUpdate = true;
+
+                if (this.planetGroup.visible) {
+                    this.planetGroup.rotation.y += 0.08 * dt;
+                }
+            }
+
+            updateGameplay(dt) {
+                const cfg = this.getLevelConfig(this.level);
+                const sens = this.storage.data.settings.sensitivity || 1.0;
+
+                // 1. Update Starfield
+                this.updateStarfield(dt, cfg.speedMult);
+
+                // 2. Player Movement with Diagonal Normalization & Arena Bounds (FR-01)
+                let moveX = (this.keys.right ? 1 : 0) - (this.keys.left ? 1 : 0);
+                let moveY = (this.keys.up ? 1 : 0) - (this.keys.down ? 1 : 0);
+
+                if (moveX !== 0 && moveY !== 0) {
+                    const invMag = 1 / Math.sqrt(2);
+                    moveX *= invMag;
+                    moveY *= invMag;
+                }
+
+                const speed = GAME_CONFIG.PLAYER.BASE_SPEED * sens;
+                this.playerMesh.position.x += moveX * speed * dt;
+                this.playerMesh.position.y += moveY * speed * dt;
+
+                // Clamp within Arena Bounds
+                this.playerMesh.position.x = THREE.MathUtils.clamp(
+                    this.playerMesh.position.x,
+                    -GAME_CONFIG.PLAYER.BOUNDS_X,
+                    GAME_CONFIG.PLAYER.BOUNDS_X
+                );
+                this.playerMesh.position.y = THREE.MathUtils.clamp(
+                    this.playerMesh.position.y,
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MIN,
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MAX
+                );
+
+                // Smooth Ship Banking / Tilting Animation & Engine Pulse
+                const targetRoll = -moveX * 0.48;
+                const targetPitch = moveY * 0.25;
+                this.playerMesh.rotation.z = THREE.MathUtils.lerp(this.playerMesh.rotation.z, targetRoll, 10 * dt);
+                this.playerMesh.rotation.x = THREE.MathUtils.lerp(this.playerMesh.rotation.x, targetPitch, 10 * dt);
+                this.playerModel.thruster.scale.z = 0.85 + Math.sin(performance.now() * 0.025) * 0.2;
+
+                // 3. Smooth Chase Camera Following Player Ship (PRD 3.3)
+                const camTargetX = this.playerMesh.position.x * 0.45;
+                const camTargetY = 3.6 + this.playerMesh.position.y * 0.35;
+                this.camera.position.x = THREE.MathUtils.lerp(this.camera.position.x, camTargetX, 6 * dt);
+                this.camera.position.y = THREE.MathUtils.lerp(this.camera.position.y, camTargetY, 6 * dt);
+                this.camera.position.z = 11.5;
+
+                if (this.screenShakeTimer > 0) {
+                    this.screenShakeTimer -= dt;
+                    this.camera.position.x += (Math.random() - 0.5) * 0.55;
+                    this.camera.position.y += (Math.random() - 0.5) * 0.55;
+                }
+                this.camera.lookAt(
+                    this.playerMesh.position.x * 0.55,
+                    this.playerMesh.position.y * 0.45,
+                    -18
+                );
+
+                // 4. Invulnerability & Shield Flash Decay
+                if (this.invulnerableTimer > 0) {
+                    this.invulnerableTimer -= dt;
+                    this.playerModel.shield.material.opacity = Math.max(0, (this.invulnerableTimer / GAME_CONFIG.PLAYER.INVULNERABLE_TIME) * 0.75);
+                } else {
+                    this.playerModel.shield.material.opacity = 0;
+                }
+
+                // 5. Player Laser Shooting & Cooldown (FR-02)
+                if (this.laserCooldownTimer > 0) {
+                    this.laserCooldownTimer -= dt;
+                }
+                if (this.keys.shoot && this.laserCooldownTimer <= 0) {
+                    this.firePlayerLaser();
+                    this.laserCooldownTimer = GAME_CONFIG.PLAYER.LASER_COOLDOWN;
+                }
+
+                // 6. Update Active Player Lasers
+                for (let i = this.laserPool.active.length - 1; i >= 0; i--) {
+                    const laser = this.laserPool.active[i];
+                    laser.mesh.position.z -= GAME_CONFIG.PLAYER.LASER_SPEED * dt;
+                    if (laser.mesh.position.z < GAME_CONFIG.SPAWN.SPAWN_Z - 10) {
+                        this.laserPool.release(laser);
+                    }
+                }
+
+                // 7. Spawn Asteroids & Enemies
+                this.asteroidSpawnTimer -= dt;
+                if (this.asteroidSpawnTimer <= 0) {
+                    this.spawnAsteroid();
+                    this.asteroidSpawnTimer = (GAME_CONFIG.SPAWN.BASE_ASTEROID_INTERVAL / cfg.spawnMult) * (0.75 + Math.random() * 0.5);
+                }
+
+                this.enemySpawnTimer -= dt;
+                if (this.enemySpawnTimer <= 0) {
+                    this.spawnEnemy();
+                    this.enemySpawnTimer = (GAME_CONFIG.SPAWN.BASE_ENEMY_INTERVAL / cfg.spawnMult) * (0.8 + Math.random() * 0.4);
+                }
+
+                // 8. Update Asteroids & Check Collisions (FR-04)
+                for (let i = this.asteroidPool.active.length - 1; i >= 0; i--) {
+                    const ast = this.asteroidPool.active[i];
+                    ast.mesh.position.z += ast.speed * dt;
+                    ast.mesh.rotation.x += ast.rotSpeed.x * dt;
+                    ast.mesh.rotation.y += ast.rotSpeed.y * dt;
+                    ast.mesh.rotation.z += ast.rotSpeed.z * dt;
+
+                    if (ast.flashTimer > 0) {
+                        ast.flashTimer -= dt;
+                        if (ast.flashTimer <= 0) ast.mesh.material.emissive.setHex(0x000000);
+                    }
+
+                    // Despawn behind camera
+                    if (ast.mesh.position.z > GAME_CONFIG.SPAWN.DESPAWN_Z) {
+                        this.asteroidPool.release(ast);
+                        continue;
+                    }
+
+                    // Check collision with Player Ship
+                    const distToPlayer = ast.mesh.position.distanceTo(this.playerMesh.position);
+                    if (distToPlayer < ast.radius + 1.45) {
+                        this.spawnExplosion(ast.mesh.position, 0x94a3b8, 16);
+                        this.asteroidPool.release(ast);
+                        this.damagePlayer(GAME_CONFIG.DAMAGE.ASTEROID_COLLISION);
+                        if (this.state !== GAME_STATE.PLAYING) return;
+                        continue;
+                    }
+
+                    // Check collision with Player Lasers
+                    for (let j = this.laserPool.active.length - 1; j >= 0; j--) {
+                        const laser = this.laserPool.active[j];
+                        if (ast.mesh.position.distanceTo(laser.mesh.position) < ast.radius + laser.radius) {
+                            this.laserPool.release(laser);
+                            ast.hp -= GAME_CONFIG.PLAYER.LASER_DAMAGE;
+                            ast.mesh.material.emissive.setHex(0x38bdf8);
+                            ast.flashTimer = 0.08;
+
+                            if (ast.hp <= 0) {
+                                const pos = ast.mesh.position.clone();
+                                const pts = ast.points;
+                                this.spawnExplosion(pos, 0x38bdf8, 18);
+                                this.audio.playExplosion(ast.maxHp > 50);
+                                this.asteroidPool.release(ast);
+                                this.addScore(pts, pos);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                // 9. Update Enemy Spaceships & Check Collisions (FR-05)
+                for (let i = this.enemyPool.active.length - 1; i >= 0; i--) {
+                    const enemy = this.enemyPool.active[i];
+                    enemy.age += dt;
+
+                    if (enemy.type === 'BOSS') {
+                        // Boss moves to z = -42 and strafes horizontally/vertically
+                        if (enemy.mesh.position.z < -42) {
+                            enemy.mesh.position.z += enemy.speed * dt;
+                        }
+                        enemy.mesh.position.x = Math.sin(enemy.age * 1.1) * 10;
+                        enemy.mesh.position.y = 2 + Math.cos(enemy.age * 1.6) * 3.5;
+                        enemy.mesh.rotation.z = -Math.cos(enemy.age * 1.1) * 0.18;
+                    } else if (enemy.type === 'DRONE') {
+                        // Sine-wave weaving movement
+                        enemy.mesh.position.z += enemy.speed * dt;
+                        enemy.mesh.position.x = enemy.baseX + Math.sin(enemy.age * 4.2) * 3.8;
+                        enemy.mesh.rotation.z += 2.5 * dt;
+                    } else {
+                        enemy.mesh.position.z += enemy.speed * dt;
+                        // Gentle tracking toward player X
+                        const dx = this.playerMesh.position.x - enemy.mesh.position.x;
+                        enemy.mesh.position.x += THREE.MathUtils.clamp(dx, -1, 1) * 3.5 * dt;
+                    }
+
+                    if (enemy.flashTimer > 0) {
+                        enemy.flashTimer -= dt;
+                        if (enemy.flashTimer <= 0) {
+                            enemy.hullMat.emissive.setHex(enemy.baseColor);
+                        }
+                    }
+
+                    // Enemy Shooting
+                    enemy.shootTimer -= dt;
+                    if (enemy.shootTimer <= 0 && enemy.mesh.position.z < -12 && enemy.mesh.position.z > -115) {
+                        this.fireEnemyProjectile(enemy);
+                        enemy.shootTimer = enemy.type === 'BOSS' ? 1.45 : (1.7 / cfg.spawnMult) + Math.random() * 0.7;
+                    }
+
+                    // Despawn behind camera (non-boss)
+                    if (enemy.type !== 'BOSS' && enemy.mesh.position.z > GAME_CONFIG.SPAWN.DESPAWN_Z) {
+                        this.enemyPool.release(enemy);
+                        continue;
+                    }
+
+                    // Collision with Player Ship (-30 HP per FR-07)
+                    if (enemy.mesh.position.distanceTo(this.playerMesh.position) < enemy.radius + 1.45) {
+                        this.spawnExplosion(enemy.mesh.position, enemy.baseColor, 24);
+                        if (enemy.type !== 'BOSS') {
+                            this.enemyPool.release(enemy);
+                        }
+                        this.damagePlayer(GAME_CONFIG.DAMAGE.ENEMY_COLLISION);
+                        if (this.state !== GAME_STATE.PLAYING) return;
+                        continue;
+                    }
+
+                    // Collision with Player Lasers
+                    for (let j = this.laserPool.active.length - 1; j >= 0; j--) {
+                        const laser = this.laserPool.active[j];
+                        if (enemy.mesh.position.distanceTo(laser.mesh.position) < enemy.radius + laser.radius) {
+                            this.laserPool.release(laser);
+                            enemy.hp -= GAME_CONFIG.PLAYER.LASER_DAMAGE;
+                            enemy.hullMat.emissive.setHex(0xffffff);
+                            enemy.flashTimer = 0.08;
+
+                            if (enemy.type === 'BOSS') {
+                                this.updateBossHUD();
+                            }
+
+                            if (enemy.hp <= 0) {
+                                const pos = enemy.mesh.position.clone();
+                                const pts = enemy.points;
+                                const isBoss = enemy.type === 'BOSS';
+                                this.spawnExplosion(pos, enemy.baseColor, isBoss ? 45 : 22);
+                                this.audio.playExplosion(isBoss || enemy.type === 'HEAVY');
+                                if (isBoss) {
+                                    this.bossActive = null;
+                                    this.updateBossHUD();
+                                }
+                                this.enemyPool.release(enemy);
+                                this.addScore(pts, pos);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                // 10. Update Enemy Projectiles & Check Player Hit (-15 HP per FR-07)
+                for (let i = this.enemyProjectilePool.active.length - 1; i >= 0; i--) {
+                    const proj = this.enemyProjectilePool.active[i];
+                    proj.mesh.position.addScaledVector(proj.velocity, dt);
+
+                    if (proj.mesh.position.z > GAME_CONFIG.SPAWN.DESPAWN_Z || proj.mesh.position.z < -150) {
+                        this.enemyProjectilePool.release(proj);
+                        continue;
+                    }
+
+                    if (proj.mesh.position.distanceTo(this.playerMesh.position) < proj.radius + 1.35) {
+                        this.spawnExplosion(proj.mesh.position, 0xef4444, 10);
+                        this.enemyProjectilePool.release(proj);
+                        this.damagePlayer(GAME_CONFIG.DAMAGE.ENEMY_PROJECTILE);
+                        if (this.state !== GAME_STATE.PLAYING) return;
+                    }
+                }
+
+                // 11. Update Explosion Particles
+                for (let i = this.particlePool.active.length - 1; i >= 0; i--) {
+                    const p = this.particlePool.active[i];
+                    p.life += dt;
+                    if (p.life >= p.maxLife) {
+                        this.particlePool.release(p);
+                        continue;
+                    }
+                    p.mesh.position.addScaledVector(p.velocity, dt);
+                    p.mat.opacity = 1 - p.life / p.maxLife;
+                    p.mesh.rotation.x += 4 * dt;
+                    p.mesh.rotation.y += 4 * dt;
+                }
+            }
+
+            /**
+             * Main RequestAnimationFrame Loop
+             */
+            animate() {
+                requestAnimationFrame(this.animate);
+
+                // Clamp delta time so tab switching never causes huge jumps
+                const dt = Math.min(this.clock.getDelta(), 0.1);
+
+                if (this.state === GAME_STATE.MENU || this.state === GAME_STATE.LOADING) {
+                    // Decorative 3D Ship Floating Animation on Main Menu (FR-16)
+                    this.updateStarfield(dt, 0.5);
+                    const t = performance.now() * 0.001;
+                    this.playerMesh.position.y = 0.2 + Math.sin(t * 1.8) * 0.35;
+                    this.playerMesh.rotation.y = -0.55 + Math.sin(t * 0.9) * 0.22;
+                    this.playerMesh.rotation.z = 0.1 + Math.cos(t * 1.3) * 0.08;
+                    this.playerModel.thruster.scale.z = 0.85 + Math.sin(t * 20) * 0.2;
+                } else if (this.state === GAME_STATE.PLAYING) {
+                    this.updateGameplay(dt);
+                } else if (this.state === GAME_STATE.GAME_OVER) {
+                    // Continue updating explosion particles on Game Over
+                    this.updateStarfield(dt, 0.25);
+                    for (let i = this.particlePool.active.length - 1; i >= 0; i--) {
+                        const p = this.particlePool.active[i];
+                        p.life += dt;
+                        if (p.life >= p.maxLife) {
+                            this.particlePool.release(p);
+                            continue;
+                        }
+                        p.mesh.position.addScaledVector(p.velocity, dt);
+                        p.mat.opacity = 1 - p.life / p.maxLife;
+                    }
+                }
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // Start the 3D Game Engine on window load
+        window.onload = function () {
+            window.spaceShooterGame = new SpaceShooterGame();
+        };
+    </script>
+</body>
+</html>
