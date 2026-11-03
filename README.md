@@ -16,3 +16,4 @@ Cukup buka file `index.html` di browser modern apapun atau jalankan dengan local
 ```bash
 npx serve .
 ```
+

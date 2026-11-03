@@ -2,7 +2,7 @@
 <html lang="id" class="dark">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>SPACE SHOOTER 3D — Explore the Galaxy. Fight for Survival.</title>
     
     <!-- Tailwind CSS CDN -->
@@ -69,10 +69,21 @@
             padding: 0;
             width: 100%;
             height: 100%;
+            height: 100dvh;
             overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: none;
             background-color: var(--bg-color);
             color: var(--text);
             font-family: 'Inter', sans-serif;
+        }
+
+        /* Safe Area Padding Utility */
+        .safe-area-pad {
+            padding-top: max(0.75rem, env(safe-area-inset-top));
+            padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+            padding-left: max(0.75rem, env(safe-area-inset-left));
+            padding-right: max(0.75rem, env(safe-area-inset-right));
         }
 
         /* 3D Canvas Container */
@@ -81,8 +92,10 @@
             inset: 0;
             width: 100%;
             height: 100%;
+            height: 100dvh;
             z-index: 1;
             background-color: #050816;
+            touch-action: none;
         }
 
         canvas {
@@ -240,6 +253,63 @@
             background: rgba(34, 211, 238, 0.4);
             border-radius: 999px;
         }
+
+        /* Responsive Touch Controls Visibility */
+        #touch-controls {
+            display: none;
+            touch-action: manipulation;
+        }
+        body.is-touch-device #touch-controls {
+            display: flex !important;
+        }
+        @media (max-width: 1024px) {
+            #touch-controls {
+                display: flex !important;
+            }
+        }
+        @media (min-width: 1025px) {
+            body:not(.is-touch-device) #touch-controls {
+                display: none !important;
+            }
+        }
+
+        /* Mobile Landscape Orientation Optimizations */
+        @media (max-height: 520px) and (orientation: landscape) {
+            #screen-menu {
+                padding: 0.5rem 1.25rem !important;
+            }
+            .menu-hero-wrap {
+                margin-top: 0.25rem !important;
+                margin-bottom: 0.25rem !important;
+                gap: 0.5rem !important;
+            }
+            .menu-hero-title {
+                font-size: 1.75rem !important;
+                margin-bottom: 0.25rem !important;
+            }
+            .menu-hero-desc {
+                font-size: 0.75rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            .menu-btn-group {
+                gap: 0.5rem !important;
+            }
+            .menu-btn-primary {
+                padding: 0.5rem 1rem !important;
+                font-size: 0.8rem !important;
+            }
+            .scifi-panel {
+                max-height: 88dvh !important;
+                padding: 0.85rem !important;
+            }
+            #touch-controls {
+                padding-bottom: 0.25rem !important;
+            }
+            #btn-touch-fire {
+                width: 4.5rem !important;
+                height: 4.5rem !important;
+            }
+        }
     </style>
 </head>
 <body class="relative select-none">
@@ -276,52 +346,52 @@
     <!-- ==========================================
          STATE 2: MAIN MENU (FR-16 & Section 5.3.A)
          ========================================== -->
-    <div id="screen-menu" class="fixed inset-0 z-30 hidden flex-col justify-between p-4 sm:p-8 pointer-events-none">
+    <div id="screen-menu" class="fixed inset-0 z-30 hidden flex-col justify-between p-3 sm:p-6 md:p-8 overflow-y-auto safe-area-pad pointer-events-auto">
         <!-- Top Bar: High Score & Version Badge -->
-        <div class="w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 pointer-events-auto">
-            <div class="scifi-hud-card px-4 py-2 rounded-xl flex items-center gap-3">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <span class="font-orbitron text-xs tracking-wider text-slate-300">SYSTEM ONLINE // VER 1.0</span>
+        <div class="w-full max-w-6xl mx-auto flex items-center justify-between gap-2.5 shrink-0">
+            <div class="scifi-hud-card px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-2 sm:gap-3">
+                <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span class="font-orbitron text-[10px] sm:text-xs tracking-wider text-slate-300">ONLINE // V1.0</span>
             </div>
 
-            <div class="scifi-hud-card px-5 py-2.5 rounded-xl flex items-center gap-3 border-cyan-400/40">
-                <i class="fa-solid fa-trophy text-amber-400 text-lg"></i>
+            <div class="scifi-hud-card px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-xl flex items-center gap-2.5 sm:gap-3 border-cyan-400/40">
+                <i class="fa-solid fa-trophy text-amber-400 text-sm sm:text-lg"></i>
                 <div>
-                    <div class="text-[10px] uppercase tracking-widest text-slate-400">High Score</div>
-                    <div id="menu-highscore" class="font-orbitron text-lg font-bold text-cyan-300">0</div>
+                    <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-slate-400">High Score</div>
+                    <div id="menu-highscore" class="font-orbitron text-sm sm:text-lg font-bold text-cyan-300">0</div>
                 </div>
             </div>
         </div>
 
         <!-- Center / Left Hero Content & Menu Buttons -->
-        <div class="w-full max-w-6xl mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div class="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left pointer-events-auto">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-600/20 border border-cyan-400/40 text-cyan-300 text-xs font-semibold tracking-widest uppercase mb-4">
+        <div class="w-full max-w-6xl mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-center py-4 menu-hero-wrap">
+            <div class="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/20 border border-cyan-400/40 text-cyan-300 text-[10px] sm:text-xs font-semibold tracking-widest uppercase mb-2 sm:mb-4">
                     <i class="fa-solid fa-satellite-dish"></i> 3D Space Combat Arcade
                 </div>
-                <h1 class="font-orbitron text-4xl sm:text-6xl font-black tracking-tight text-white glow-cyan leading-none mb-3">
+                <h1 class="font-orbitron text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white glow-cyan leading-none mb-2 sm:mb-3 menu-hero-title">
                     SPACE <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">SHOOTER</span> 3D
                 </h1>
-                <p class="font-orbitron text-sm sm:text-base text-cyan-200/90 tracking-widest uppercase mb-8">
+                <p class="font-orbitron text-xs sm:text-sm md:text-base text-cyan-200/90 tracking-widest uppercase mb-5 sm:mb-8 menu-hero-desc">
                     Explore the Galaxy. Fight for Survival.
                 </p>
 
                 <!-- Main Action Buttons -->
-                <div class="w-full max-w-sm flex flex-col gap-3.5">
-                    <button id="btn-start-game" class="scifi-btn scifi-btn-primary w-full py-4 px-6 rounded-xl text-base font-bold text-white flex items-center justify-center gap-3">
+                <div class="w-full max-w-sm flex flex-col gap-2.5 sm:gap-3.5 menu-btn-group">
+                    <button id="btn-start-game" class="scifi-btn scifi-btn-primary w-full py-3.5 sm:py-4 px-6 rounded-xl text-sm sm:text-base font-bold text-white flex items-center justify-center gap-3 menu-btn-primary">
                         <i class="fa-solid fa-play"></i> Start Game
                     </button>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="btn-how-to-play" class="scifi-btn scifi-btn-secondary py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
+                    <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
+                        <button id="btn-how-to-play" class="scifi-btn scifi-btn-secondary py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
                             <i class="fa-solid fa-gamepad text-cyan-400"></i> How to Play
                         </button>
-                        <button id="btn-leaderboard" class="scifi-btn scifi-btn-secondary py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-ranking-star text-amber-400"></i> Leaderboard
+                        <button id="btn-leaderboard" class="scifi-btn scifi-btn-secondary py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-ranking-star text-amber-400"></i> Ranking
                         </button>
                     </div>
 
-                    <button id="btn-settings-menu" class="scifi-btn scifi-btn-secondary w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
+                    <button id="btn-settings-menu" class="scifi-btn scifi-btn-secondary w-full py-2.5 sm:py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
                         <i class="fa-solid fa-sliders text-purple-400"></i> Settings & Audio
                     </button>
                 </div>
@@ -349,117 +419,125 @@
         </div>
 
         <!-- Bottom Bar: Quick Control Summary -->
-        <div class="w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 pointer-events-auto">
-            <div class="flex flex-wrap items-center gap-4">
-                <span><kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono">WASD / Arrows</kbd> Manuver Pesawat</span>
-                <span><kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono">SPACE</kbd> Tembak Laser</span>
-                <span><kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono">ESC / P</kbd> Pause</span>
+        <div class="w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs text-slate-400 shrink-0">
+            <div class="hidden md:flex flex-wrap items-center gap-4">
+                <span><kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono text-[10px]">WASD / Arrows</kbd> Manuver Pesawat</span>
+                <span><kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono text-[10px]">SPACE</kbd> Tembak Laser</span>
+                <span><kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono text-[10px]">ESC / P</kbd> Pause</span>
             </div>
-            <div class="text-slate-500">Three.js WebGL Engine</div>
+            <div class="md:hidden flex items-center gap-2 text-cyan-300/80">
+                <i class="fa-solid fa-mobile-screen"></i> Kontrol sentuh / D-pad otomatis aktif di layar sentuh
+            </div>
+            <div class="text-slate-500 hidden sm:block">Three.js WebGL Engine</div>
         </div>
     </div>
 
     <!-- ==========================================
          STATE 3: GAMEPLAY HUD (Section 5.3.B)
          ========================================== -->
-    <div id="screen-hud" class="fixed inset-0 z-20 hidden flex-col justify-between p-3 sm:p-5 pointer-events-none">
-        <!-- Top HUD Row -->
-        <div class="w-full max-w-7xl mx-auto grid grid-cols-3 items-start gap-2 sm:gap-4">
+    <div id="screen-hud" class="fixed inset-0 z-20 hidden flex-col justify-between p-2 sm:p-5 safe-area-pad pointer-events-none select-none">
+        <!-- Top HUD Row: Flexbox Responsive Bar (Prevents Multi-Column Crushing) -->
+        <div class="w-full max-w-7xl mx-auto flex items-start justify-between gap-1.5 sm:gap-4 pointer-events-none">
             
-            <!-- Top-Left: Health Bar (FR-07) -->
-            <div class="flex flex-col items-start gap-2">
-                <div class="scifi-hud-card p-3 sm:px-4 sm:py-3 rounded-2xl w-full max-w-[260px]">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="font-orbitron text-[11px] sm:text-xs font-bold tracking-wider text-slate-300 flex items-center gap-1.5">
-                            <i class="fa-solid fa-shield-halved text-cyan-400"></i> HULL INTEGRITY
+            <!-- Top-Left: Hull Health Bar (FR-07) -->
+            <div class="flex flex-col items-start gap-1 flex-1 max-w-[135px] xs:max-w-[165px] sm:max-w-[250px] pointer-events-auto">
+                <div class="scifi-hud-card p-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl w-full">
+                    <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
+                        <span class="font-orbitron text-[9px] sm:text-xs font-bold tracking-wider text-slate-300 flex items-center gap-1 sm:gap-1.5 truncate">
+                            <i class="fa-solid fa-shield-halved text-cyan-400"></i> <span class="hidden xs:inline">HULL</span>
                         </span>
-                        <span id="hud-hp-text" class="font-orbitron text-xs sm:text-sm font-extrabold text-emerald-400">100 / 100</span>
+                        <span id="hud-hp-text" class="font-orbitron text-[10px] sm:text-sm font-extrabold text-emerald-400 whitespace-nowrap">100 / 100</span>
                     </div>
-                    <div class="w-full h-3 bg-slate-900/90 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                    <div class="w-full h-2 sm:h-3 bg-slate-900/90 rounded-full overflow-hidden p-0.5 border border-slate-700">
                         <div id="hud-hp-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-200" style="width: 100%;"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Top-Center: Score & Level Target Progress (FR-10, FR-11) -->
-            <div class="flex flex-col items-center">
-                <div class="scifi-hud-card px-4 sm:px-7 py-2.5 rounded-2xl text-center min-w-[160px] sm:min-w-[230px]">
-                    <div class="text-[10px] uppercase tracking-widest text-cyan-300/80 font-semibold">SCORE</div>
-                    <div id="hud-score" class="font-orbitron text-xl sm:text-3xl font-black text-white glow-cyan leading-tight">0</div>
-                    <div class="flex items-center justify-center gap-3 mt-1 pt-1 border-t border-slate-700/60 text-[10px] sm:text-xs text-slate-400">
-                        <span>TARGET: <strong id="hud-target-score" class="text-cyan-300">100</strong></span>
+            <!-- Top-Center: Score & Target Progress (FR-10, FR-11) -->
+            <div class="flex flex-col items-center shrink-0 pointer-events-auto">
+                <div class="scifi-hud-card px-2.5 sm:px-7 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl text-center min-w-[110px] sm:min-w-[210px]">
+                    <div class="text-[8px] sm:text-[10px] uppercase tracking-widest text-cyan-300/80 font-semibold leading-none">SCORE</div>
+                    <div id="hud-score" class="font-orbitron text-base sm:text-3xl font-black text-white glow-cyan leading-tight my-0.5 sm:my-0">0</div>
+                    <div class="flex items-center justify-center gap-1.5 sm:gap-3 pt-0.5 border-t border-slate-700/60 text-[8px] sm:text-xs text-slate-400">
+                        <span>TGT: <strong id="hud-target-score" class="text-cyan-300">100</strong></span>
                         <span>•</span>
                         <span>BEST: <strong id="hud-high-score" class="text-amber-400">0</strong></span>
                     </div>
                 </div>
 
                 <!-- Boss Health Bar (Visible when Boss Ship is active) -->
-                <div id="hud-boss-container" class="hidden mt-3 scifi-hud-card px-4 py-2 rounded-xl w-64 sm:w-80 border-red-500/60">
-                    <div class="flex items-center justify-between text-xs mb-1">
-                        <span class="font-orbitron font-bold text-red-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-skull-crossbones animate-pulse"></i> DREADNOUGHT BOSS
+                <div id="hud-boss-container" class="hidden mt-2 scifi-hud-card px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl w-48 sm:w-80 border-red-500/60">
+                    <div class="flex items-center justify-between text-[9px] sm:text-xs mb-1">
+                        <span class="font-orbitron font-bold text-red-400 flex items-center gap-1 sm:gap-1.5">
+                            <i class="fa-solid fa-skull-crossbones animate-pulse"></i> BOSS DREADNOUGHT
                         </span>
-                        <span id="hud-boss-hp-text" class="font-orbitron text-red-300 text-xs">250 HP</span>
+                        <span id="hud-boss-hp-text" class="font-orbitron text-red-300">250 HP</span>
                     </div>
-                    <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-red-500/40">
+                    <div class="w-full h-1.5 sm:h-2.5 bg-slate-950 rounded-full overflow-hidden border border-red-500/40">
                         <div id="hud-boss-hp-bar" class="h-full bg-gradient-to-r from-red-600 to-amber-500 transition-all duration-150" style="width: 100%;"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Top-Right: Level, Zone Theme & Pause Button (FR-13, FR-15, FR-17) -->
-            <div class="flex items-start justify-end gap-2 sm:gap-3">
-                <div class="scifi-hud-card px-3.5 sm:px-4 py-2.5 rounded-2xl text-right">
-                    <div class="flex items-center justify-end gap-2">
-                        <span class="text-[10px] uppercase tracking-widest text-slate-400">LEVEL</span>
-                        <span id="hud-level" class="font-orbitron text-lg sm:text-2xl font-black text-cyan-400 leading-none">1</span>
+            <div class="flex items-start justify-end gap-1.5 sm:gap-3 shrink-0 pointer-events-auto">
+                <div class="scifi-hud-card px-2 sm:px-4 py-1 sm:py-2.5 rounded-xl sm:rounded-2xl text-right">
+                    <div class="flex items-center justify-end gap-1 sm:gap-2">
+                        <span class="text-[8px] sm:text-[10px] uppercase tracking-widest text-slate-400">LVL</span>
+                        <span id="hud-level" class="font-orbitron text-sm sm:text-2xl font-black text-cyan-400 leading-none">1</span>
                     </div>
-                    <div id="hud-zone-name" class="text-[10px] sm:text-xs font-medium text-purple-300 truncate max-w-[120px] sm:max-w-none">
+                    <div id="hud-zone-name" class="text-[8px] sm:text-xs font-medium text-purple-300 truncate max-w-[65px] sm:max-w-none">
                         Deep Space
                     </div>
                 </div>
 
-                <button id="btn-hud-pause" class="pointer-events-auto scifi-hud-card hover:border-cyan-400 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-white hover:text-cyan-300 transition-all" title="Pause Game (Esc / P)">
-                    <i class="fa-solid fa-pause text-base sm:text-lg"></i>
+                <button id="btn-hud-pause" class="pointer-events-auto scifi-hud-card hover:border-cyan-400 w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center text-white hover:text-cyan-300 transition-all active:scale-95" title="Pause Game (Esc / P)">
+                    <i class="fa-solid fa-pause text-xs sm:text-base"></i>
                 </button>
             </div>
         </div>
 
         <!-- Center Level Up Banner Notification (FR-13) -->
-        <div id="level-up-banner" class="hidden fixed top-28 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-            <div class="scifi-panel px-8 py-4 rounded-2xl border-2 border-cyan-400 text-center shadow-2xl">
-                <div class="font-orbitron text-xs uppercase tracking-[0.25em] text-cyan-300 mb-1">Sector Cleared</div>
-                <div id="level-up-title" class="font-orbitron text-2xl sm:text-3xl font-black text-white glow-cyan">LEVEL 2 REACHED!</div>
-                <div id="level-up-subtitle" class="text-xs sm:text-sm text-purple-300 mt-1">Entering Zone: Blue Nebula</div>
+        <div id="level-up-banner" class="hidden fixed top-24 sm:top-28 left-1/2 -translate-x-1/2 z-30 pointer-events-none w-11/12 max-w-md">
+            <div class="scifi-panel px-4 sm:px-8 py-3 sm:py-4 rounded-2xl border-2 border-cyan-400 text-center shadow-2xl">
+                <div class="font-orbitron text-[10px] sm:text-xs uppercase tracking-[0.2em] text-cyan-300 mb-0.5 sm:mb-1">Sector Cleared</div>
+                <div id="level-up-title" class="font-orbitron text-xl sm:text-3xl font-black text-white glow-cyan leading-tight">LEVEL 2 REACHED!</div>
+                <div id="level-up-subtitle" class="text-[11px] sm:text-sm text-purple-300 mt-1">Entering Zone: Blue Nebula</div>
             </div>
         </div>
 
         <!-- Bottom HUD: Control Hints (Desktop) & Touch Controls (Tablet/Mobile) -->
-        <div class="w-full max-w-7xl mx-auto flex flex-col gap-3">
+        <div class="w-full max-w-7xl mx-auto flex flex-col gap-2 pointer-events-none">
             <!-- Touch Controls for Mobile / Tablet -->
-            <div id="touch-controls" class="flex md:hidden items-center justify-between w-full px-2 pb-2 pointer-events-auto">
+            <div id="touch-controls" class="flex items-end justify-between w-full px-1 sm:px-2 pb-1 sm:pb-2 pointer-events-none">
                 <!-- Virtual D-Pad -->
-                <div class="grid grid-cols-3 gap-1.5 w-36 h-36">
+                <div class="grid grid-cols-3 gap-1 sm:gap-1.5 w-28 h-28 sm:w-36 sm:h-36 pointer-events-auto touch-manipulation">
                     <div></div>
-                    <button data-touch-dir="up" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300"><i class="fa-solid fa-chevron-up"></i></button>
+                    <button data-touch-dir="up" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300 text-sm sm:text-lg active:scale-95 transition-transform"><i class="fa-solid fa-chevron-up"></i></button>
                     <div></div>
-                    <button data-touch-dir="left" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300"><i class="fa-solid fa-chevron-left"></i></button>
-                    <div class="rounded-xl bg-slate-900/40 border border-slate-700/40 flex items-center justify-center"><i class="fa-solid fa-crosshairs text-xs text-slate-500"></i></div>
-                    <button data-touch-dir="right" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button data-touch-dir="left" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300 text-sm sm:text-lg active:scale-95 transition-transform"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="rounded-xl bg-slate-900/40 border border-slate-700/40 flex items-center justify-center"><i class="fa-solid fa-crosshairs text-[10px] sm:text-xs text-slate-500"></i></div>
+                    <button data-touch-dir="right" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300 text-sm sm:text-lg active:scale-95 transition-transform"><i class="fa-solid fa-chevron-right"></i></button>
                     <div></div>
-                    <button data-touch-dir="down" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300"><i class="fa-solid fa-chevron-down"></i></button>
+                    <button data-touch-dir="down" class="scifi-hud-card active:bg-cyan-500/40 rounded-xl flex items-center justify-center text-cyan-300 text-sm sm:text-lg active:scale-95 transition-transform"><i class="fa-solid fa-chevron-down"></i></button>
                     <div></div>
                 </div>
 
+                <!-- Touch Drag Hint (Mobile) -->
+                <div class="hidden sm:block text-[10px] text-cyan-300/40 font-mono tracking-widest text-center pointer-events-none pb-1">
+                    SWIPE / D-PAD TO MOVE
+                </div>
+
                 <!-- Touch Fire Laser Button -->
-                <button id="btn-touch-fire" class="w-24 h-24 rounded-full scifi-btn-primary flex flex-col items-center justify-center text-white shadow-lg active:scale-95">
-                    <i class="fa-solid fa-burst text-2xl mb-1"></i>
-                    <span class="font-orbitron text-[10px] font-bold">FIRE</span>
+                <button id="btn-touch-fire" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full scifi-btn-primary flex flex-col items-center justify-center text-white shadow-lg active:scale-95 pointer-events-auto touch-manipulation">
+                    <i class="fa-solid fa-burst text-xl sm:text-2xl mb-0.5 sm:mb-1"></i>
+                    <span class="font-orbitron text-[9px] sm:text-[10px] font-bold tracking-wider">FIRE</span>
                 </button>
             </div>
 
             <!-- Desktop Control Guide Bar -->
-            <div class="hidden md:flex items-center justify-between scifi-hud-card px-4 py-2 rounded-xl text-xs text-slate-300/90 w-fit mx-auto gap-6">
+            <div class="hidden md:flex items-center justify-between scifi-hud-card px-4 py-2 rounded-xl text-xs text-slate-300/90 w-fit mx-auto gap-6 pointer-events-auto">
                 <span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-cyan-300 font-mono text-[11px]">W A S D</kbd> / <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-cyan-300 font-mono text-[11px]">Arrows</kbd> Move</span>
                 <span class="flex items-center gap-2"><kbd class="px-2 py-0.5 bg-slate-800 rounded border border-slate-600 text-cyan-300 font-mono text-[11px]">SPACE</kbd> Laser Cannon</span>
                 <span class="flex items-center gap-2"><kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-cyan-300 font-mono text-[11px]">ESC / P</kbd> Pause</span>
@@ -470,25 +548,25 @@
     <!-- ==========================================
          STATE 4: PAUSE MENU (FR-17 & Section 5.3.C)
          ========================================== -->
-    <div id="screen-pause" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/70 backdrop-blur-md p-4">
-        <div class="scifi-panel w-full max-w-md rounded-3xl p-6 sm:p-8 text-center border border-cyan-400/40">
-            <div class="w-14 h-14 rounded-2xl bg-blue-600/20 border border-cyan-400/40 flex items-center justify-center mx-auto mb-4 text-cyan-400 text-2xl">
+    <div id="screen-pause" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/75 backdrop-blur-md p-2 sm:p-4 safe-area-pad">
+        <div class="scifi-panel w-full max-w-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-center border border-cyan-400/40 max-h-[90dvh] overflow-y-auto">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-blue-600/20 border border-cyan-400/40 flex items-center justify-center mx-auto mb-3 sm:mb-4 text-cyan-400 text-xl sm:text-2xl">
                 <i class="fa-solid fa-pause"></i>
             </div>
-            <h2 class="font-orbitron text-2xl sm:text-3xl font-extrabold text-white glow-cyan mb-1">GAME PAUSED</h2>
-            <p class="text-xs sm:text-sm text-slate-400 mb-6">Sistem pertempuran dihentikan sementara</p>
+            <h2 class="font-orbitron text-xl sm:text-3xl font-extrabold text-white glow-cyan mb-1">GAME PAUSED</h2>
+            <p class="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">Sistem pertempuran dihentikan sementara</p>
 
-            <div class="flex flex-col gap-3">
-                <button id="btn-pause-resume" class="scifi-btn scifi-btn-primary py-3.5 px-6 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2">
+            <div class="flex flex-col gap-2.5 sm:gap-3">
+                <button id="btn-pause-resume" class="scifi-btn scifi-btn-primary py-3 sm:py-3.5 px-6 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2">
                     <i class="fa-solid fa-play"></i> Resume Game
                 </button>
-                <button id="btn-pause-restart" class="scifi-btn scifi-btn-secondary py-3 px-6 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                <button id="btn-pause-restart" class="scifi-btn scifi-btn-secondary py-2.5 sm:py-3 px-6 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-rotate-right text-cyan-400"></i> Restart Mission
                 </button>
-                <button id="btn-pause-settings" class="scifi-btn scifi-btn-secondary py-3 px-6 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                <button id="btn-pause-settings" class="scifi-btn scifi-btn-secondary py-2.5 sm:py-3 px-6 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-sliders text-purple-400"></i> Settings
                 </button>
-                <button id="btn-pause-menu" class="scifi-btn scifi-btn-danger py-3 px-6 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 mt-1">
+                <button id="btn-pause-menu" class="scifi-btn scifi-btn-danger py-2.5 sm:py-3 px-6 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 mt-1">
                     <i class="fa-solid fa-house"></i> Main Menu
                 </button>
             </div>
@@ -498,55 +576,55 @@
     <!-- ==========================================
          STATE 5: GAME OVER SCREEN (FR-08, FR-09 & Section 5.3.D)
          ========================================== -->
-    <div id="screen-gameover" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
-        <div class="scifi-panel w-full max-w-lg rounded-3xl p-6 sm:p-8 text-center border border-red-500/40">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-semibold uppercase tracking-widest mb-3">
+    <div id="screen-gameover" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 safe-area-pad">
+        <div class="scifi-panel w-full max-w-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-center border border-red-500/40 max-h-[92dvh] overflow-y-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-2 sm:mb-3">
                 <i class="fa-solid fa-triangle-exclamation"></i> Hull Critical — Ship Destroyed
             </div>
-            <h2 class="font-orbitron text-3xl sm:text-4xl font-black text-white glow-danger mb-2">GAME OVER</h2>
-            <div id="gameover-new-record" class="hidden inline-block px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 font-orbitron text-xs font-bold tracking-wider mb-4 animate-bounce">
+            <h2 class="font-orbitron text-2xl sm:text-4xl font-black text-white glow-danger mb-1 sm:mb-2">GAME OVER</h2>
+            <div id="gameover-new-record" class="hidden inline-block px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 font-orbitron text-[10px] sm:text-xs font-bold tracking-wider mb-3 sm:mb-4 animate-bounce">
                 ★ REKOR TERTINGGI BARU! ★
             </div>
 
             <!-- Stats Summary Grid -->
-            <div class="grid grid-cols-3 gap-3 my-5">
-                <div class="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-3">
-                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Skor Akhir</div>
-                    <div id="gameover-score" class="font-orbitron text-xl sm:text-2xl font-extrabold text-cyan-400 mt-1">0</div>
+            <div class="grid grid-cols-3 gap-2 sm:gap-3 my-3 sm:my-5">
+                <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl sm:rounded-2xl p-2 sm:p-3">
+                    <div class="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400">Skor</div>
+                    <div id="gameover-score" class="font-orbitron text-base sm:text-2xl font-extrabold text-cyan-400 mt-0.5 sm:mt-1">0</div>
                 </div>
-                <div class="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-3">
-                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Level Terakhir</div>
-                    <div id="gameover-level" class="font-orbitron text-xl sm:text-2xl font-extrabold text-purple-400 mt-1">1</div>
+                <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl sm:rounded-2xl p-2 sm:p-3">
+                    <div class="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400">Level</div>
+                    <div id="gameover-level" class="font-orbitron text-base sm:text-2xl font-extrabold text-purple-400 mt-0.5 sm:mt-1">1</div>
                 </div>
-                <div class="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-3">
-                    <div class="text-[10px] uppercase tracking-wider text-slate-400">High Score</div>
-                    <div id="gameover-best" class="font-orbitron text-xl sm:text-2xl font-extrabold text-amber-400 mt-1">0</div>
+                <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl sm:rounded-2xl p-2 sm:p-3">
+                    <div class="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400">High Score</div>
+                    <div id="gameover-best" class="font-orbitron text-base sm:text-2xl font-extrabold text-amber-400 mt-0.5 sm:mt-1">0</div>
                 </div>
             </div>
 
             <!-- Save Score to Local Leaderboard (FR-12) -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3.5 mb-6 text-left">
-                <label for="player-name-input" class="block text-xs text-slate-300 font-medium mb-2">
-                    <i class="fa-solid fa-user-astronaut text-cyan-400 mr-1"></i> Simpan ke Leaderboard Lokal:
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-3.5 mb-4 sm:mb-6 text-left">
+                <label for="player-name-input" class="block text-xs text-slate-300 font-medium mb-1.5 sm:mb-2">
+                    <i class="fa-solid fa-user-astronaut text-cyan-400 mr-1"></i> Simpan ke Leaderboard:
                 </label>
                 <div class="flex gap-2">
-                    <input id="player-name-input" type="text" maxlength="16" placeholder="Nama Pilot (mis. Commander)" value="Pilot"
-                        class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400" />
-                    <button id="btn-save-score" class="scifi-btn scifi-btn-secondary px-4 py-2 rounded-xl text-xs font-bold shrink-0">
+                    <input id="player-name-input" type="text" maxlength="16" placeholder="Nama Pilot" value="Pilot"
+                        class="w-full px-3 py-1.5 sm:py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-cyan-400" />
+                    <button id="btn-save-score" class="scifi-btn scifi-btn-secondary px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold shrink-0">
                         Simpan
                     </button>
                 </div>
-                <p id="save-score-feedback" class="text-[11px] text-emerald-400 mt-1.5 hidden">
+                <p id="save-score-feedback" class="text-[10px] sm:text-[11px] text-emerald-400 mt-1.5 hidden">
                     <i class="fa-solid fa-check-circle"></i> Skor berhasil disimpan ke Leaderboard!
                 </p>
             </div>
 
             <!-- Action Buttons -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button id="btn-gameover-restart" class="scifi-btn scifi-btn-primary py-3.5 px-6 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                <button id="btn-gameover-restart" class="scifi-btn scifi-btn-primary py-3 sm:py-3.5 px-6 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2">
                     <i class="fa-solid fa-rotate-right"></i> Main Lagi
                 </button>
-                <button id="btn-gameover-menu" class="scifi-btn scifi-btn-secondary py-3.5 px-6 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                <button id="btn-gameover-menu" class="scifi-btn scifi-btn-secondary py-3 sm:py-3.5 px-6 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-house"></i> Menu Utama
                 </button>
             </div>
@@ -556,73 +634,73 @@
     <!-- ==========================================
          MODAL 1: HOW TO PLAY (Section 5.4 & 9)
          ========================================== -->
-    <div id="modal-howtoplay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-4">
-        <div class="scifi-panel w-full max-w-2xl rounded-3xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between border-b border-slate-700/80 pb-4 mb-5">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-book-journal-whills text-2xl text-cyan-400"></i>
-                    <h3 class="font-orbitron text-xl sm:text-2xl font-bold text-white">PANDUAN TEMPUR (HOW TO PLAY)</h3>
+    <div id="modal-howtoplay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-2 sm:p-4 safe-area-pad">
+        <div class="scifi-panel w-full max-w-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-h-[88dvh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-3 sm:pb-4 mb-4 sm:mb-5">
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <i class="fa-solid fa-book-journal-whills text-xl sm:text-2xl text-cyan-400"></i>
+                    <h3 class="font-orbitron text-lg sm:text-2xl font-bold text-white">PANDUAN TEMPUR</h3>
                 </div>
-                <button data-close-modal="modal-howtoplay" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                <button data-close-modal="modal-howtoplay" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <div class="space-y-6 text-sm text-slate-300">
+            <div class="space-y-4 sm:space-y-6 text-xs sm:text-sm text-slate-300">
                 <!-- Controls Table -->
                 <div>
-                    <h4 class="font-orbitron text-xs uppercase tracking-wider text-cyan-400 font-bold mb-2.5">1. Kontrol Pesawat</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
-                            <span>Bergerak ke Atas / Bawah</span>
-                            <kbd class="px-2 py-1 bg-slate-800 rounded text-xs text-cyan-300 font-mono">W / S / ↑ / ↓</kbd>
+                    <h4 class="font-orbitron text-[10px] sm:text-xs uppercase tracking-wider text-cyan-400 font-bold mb-2">1. Kontrol Pesawat</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="bg-slate-900/70 border border-slate-800 p-2.5 sm:p-3 rounded-xl flex items-center justify-between">
+                            <span>Bergerak Atas / Bawah</span>
+                            <kbd class="px-2 py-0.5 bg-slate-800 rounded text-xs text-cyan-300 font-mono">W / S / ↑ / ↓</kbd>
                         </div>
-                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
-                            <span>Bergerak ke Kiri / Kanan</span>
-                            <kbd class="px-2 py-1 bg-slate-800 rounded text-xs text-cyan-300 font-mono">A / D / ← / →</kbd>
+                        <div class="bg-slate-900/70 border border-slate-800 p-2.5 sm:p-3 rounded-xl flex items-center justify-between">
+                            <span>Bergerak Kiri / Kanan</span>
+                            <kbd class="px-2 py-0.5 bg-slate-800 rounded text-xs text-cyan-300 font-mono">A / D / ← / →</kbd>
                         </div>
-                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
-                            <span>Menembakkan Laser</span>
-                            <kbd class="px-2.5 py-1 bg-slate-800 rounded text-xs text-cyan-300 font-mono">SPACE</kbd>
+                        <div class="bg-slate-900/70 border border-slate-800 p-2.5 sm:p-3 rounded-xl flex items-center justify-between">
+                            <span>Tembak Laser</span>
+                            <kbd class="px-2.5 py-0.5 bg-slate-800 rounded text-xs text-cyan-300 font-mono">SPACE / FIRE</kbd>
                         </div>
-                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
-                            <span>Pause / Resume Game</span>
-                            <kbd class="px-2 py-1 bg-slate-800 rounded text-xs text-cyan-300 font-mono">ESC / P</kbd>
+                        <div class="bg-slate-900/70 border border-slate-800 p-2.5 sm:p-3 rounded-xl flex items-center justify-between">
+                            <span>Di Layar Sentuh</span>
+                            <span class="text-xs text-cyan-300 font-semibold">D-Pad / Swipe Layar</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Scoring & Targets -->
                 <div>
-                    <h4 class="font-orbitron text-xs uppercase tracking-wider text-purple-400 font-bold mb-2.5">2. Skor Sasaran & Jenis Musuh</h4>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
-                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl">
-                            <div class="font-bold text-white">Asteroid Kecil / Sedang / Besar</div>
-                            <div class="text-cyan-400 font-orbitron mt-1">+10 / +20 / +30 Poin</div>
-                            <div class="text-slate-400 mt-0.5">Tabrakan: -20 HP</div>
+                    <h4 class="font-orbitron text-[10px] sm:text-xs uppercase tracking-wider text-purple-400 font-bold mb-2">2. Sasaran & Poin</h4>
+                    <div class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                        <div class="bg-slate-900/70 border border-slate-800 p-2.5 sm:p-3 rounded-xl">
+                            <div class="font-bold text-white">Asteroid S / M / L</div>
+                            <div class="text-cyan-400 font-orbitron mt-1">+10 / +20 / +30</div>
+                            <div class="text-slate-400 text-[11px] mt-0.5">Tabrakan: -20 HP</div>
                         </div>
-                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl">
-                            <div class="font-bold text-orange-300">Scout Fighter & Alien Drone</div>
+                        <div class="bg-slate-900/70 border border-slate-800 p-2.5 sm:p-3 rounded-xl">
+                            <div class="font-bold text-orange-300">Drone & Scout</div>
                             <div class="text-cyan-400 font-orbitron mt-1">+50 Poin</div>
-                            <div class="text-slate-400 mt-0.5">Cepat & Bergerombol</div>
+                            <div class="text-slate-400 text-[11px] mt-0.5">Cepat & Agresif</div>
                         </div>
-                        <div class="bg-slate-900/70 border border-slate-800 p-3 rounded-xl col-span-2 sm:col-span-1">
-                            <div class="font-bold text-purple-300">Heavy Fighter & Boss Ship</div>
-                            <div class="text-amber-400 font-orbitron mt-1">+100 / +500 Poin</div>
-                            <div class="text-slate-400 mt-0.5">Armor Kuat & Multi-Laser</div>
+                        <div class="bg-slate-900/70 border border-slate-800 p-2.5 sm:p-3 rounded-xl xs:col-span-2 sm:col-span-1">
+                            <div class="font-bold text-purple-300">Heavy & Boss Ship</div>
+                            <div class="text-amber-400 font-orbitron mt-1">+100 / +500</div>
+                            <div class="text-slate-400 text-[11px] mt-0.5">Armor Tebal & Multi-Laser</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Damage & Progression Rules -->
-                <div class="bg-blue-950/30 border border-cyan-500/30 rounded-2xl p-4 text-xs leading-relaxed space-y-1.5">
-                    <div class="font-orbitron text-cyan-300 font-bold uppercase">Tips Bertahan Hidup:</div>
-                    <p>• Pesawat Anda memiliki <strong>100 HP</strong>. Proyektil musuh mengurangi <strong>-15 HP</strong>, tabrakan asteroid <strong>-20 HP</strong>, dan tabrakan pesawat musuh <strong>-30 HP</strong>.</p>
-                    <p>• Setiap kenaikan level (100, 250, 450, 700, 1000+ poin) akan membuka zona galaksi baru dan meningkatkan intensitas pertempuran.</p>
+                <div class="bg-blue-950/30 border border-cyan-500/30 rounded-2xl p-3 sm:p-4 text-xs leading-relaxed space-y-1">
+                    <div class="font-orbitron text-cyan-300 font-bold uppercase">Tips Pilot:</div>
+                    <p>• Pesawat memiliki <strong>100 HP</strong>. Laser musuh: <strong>-15 HP</strong>, asteroid: <strong>-20 HP</strong>, tabrakan musuh: <strong>-30 HP</strong>.</p>
+                    <p>• Skor target akan membuka zona galaksi baru dan boss tempur setiap kenaikan level.</p>
                 </div>
             </div>
 
-            <div class="mt-6 text-right">
+            <div class="mt-5 text-right">
                 <button data-close-modal="modal-howtoplay" class="scifi-btn scifi-btn-primary px-6 py-2.5 rounded-xl text-xs font-bold text-white">
                     Mengerti, Siap Tempur!
                 </button>
@@ -633,17 +711,17 @@
     <!-- ==========================================
          MODAL 2: LOCAL LEADERBOARD (FR-12)
          ========================================== -->
-    <div id="modal-leaderboard" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-4">
-        <div class="scifi-panel w-full max-w-xl rounded-3xl p-6 sm:p-8 max-h-[90vh] flex flex-col">
-            <div class="flex items-center justify-between border-b border-slate-700/80 pb-4 mb-4">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-trophy text-2xl text-amber-400"></i>
+    <div id="modal-leaderboard" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-2 sm:p-4 safe-area-pad">
+        <div class="scifi-panel w-full max-w-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-h-[88dvh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-3 sm:pb-4 mb-3 sm:mb-4">
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <i class="fa-solid fa-trophy text-xl sm:text-2xl text-amber-400"></i>
                     <div>
-                        <h3 class="font-orbitron text-xl font-bold text-white">HALL OF FAME</h3>
-                        <p class="text-xs text-slate-400">Top 10 Rekor Pilot Lokal Terbaik</p>
+                        <h3 class="font-orbitron text-lg sm:text-xl font-bold text-white">HALL OF FAME</h3>
+                        <p class="text-[11px] sm:text-xs text-slate-400">Top 10 Rekor Pilot Terbaik</p>
                     </div>
                 </div>
-                <button data-close-modal="modal-leaderboard" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                <button data-close-modal="modal-leaderboard" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -652,12 +730,12 @@
             <div class="overflow-y-auto flex-1 pr-1">
                 <table class="w-full text-left border-collapse text-xs sm:text-sm">
                     <thead>
-                        <tr class="border-b border-slate-700 text-slate-400 font-orbitron text-[11px] uppercase">
-                            <th class="py-2.5 px-3">#</th>
-                            <th class="py-2.5 px-3">Pilot</th>
-                            <th class="py-2.5 px-3 text-right">Skor</th>
-                            <th class="py-2.5 px-3 text-center">Level</th>
-                            <th class="py-2.5 px-3 text-right">Tanggal</th>
+                        <tr class="border-b border-slate-700 text-slate-400 font-orbitron text-[10px] sm:text-[11px] uppercase">
+                            <th class="py-2 px-2.5">#</th>
+                            <th class="py-2 px-2.5">Pilot</th>
+                            <th class="py-2 px-2.5 text-right">Skor</th>
+                            <th class="py-2 px-2.5 text-center">Level</th>
+                            <th class="py-2 px-2.5 text-right hidden sm:table-cell">Tanggal</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-tbody" class="divide-y divide-slate-800/80">
@@ -667,19 +745,19 @@
             </div>
 
             <!-- Reset Confirmation Inline Box (Avoids native confirm()) -->
-            <div id="reset-confirm-box" class="hidden mt-4 p-3.5 rounded-xl bg-red-950/50 border border-red-500/50 flex items-center justify-between gap-3 text-xs">
-                <span class="text-red-200">Hapus seluruh rekor skor lokal secara permanen?</span>
+            <div id="reset-confirm-box" class="hidden mt-3 sm:mt-4 p-3 rounded-xl bg-red-950/50 border border-red-500/50 flex items-center justify-between gap-3 text-xs">
+                <span class="text-red-200">Hapus seluruh rekor skor lokal?</span>
                 <div class="flex gap-2 shrink-0">
-                    <button id="btn-confirm-reset-yes" class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold">Ya, Hapus</button>
-                    <button id="btn-confirm-reset-no" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200">Batal</button>
+                    <button id="btn-confirm-reset-yes" class="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs">Ya, Hapus</button>
+                    <button id="btn-confirm-reset-no" class="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs">Batal</button>
                 </div>
             </div>
 
-            <div class="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between">
-                <button id="btn-trigger-reset" class="scifi-btn scifi-btn-danger px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+            <div class="mt-4 pt-3 sm:pt-4 border-t border-slate-800 flex items-center justify-between">
+                <button id="btn-trigger-reset" class="scifi-btn scifi-btn-danger px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
                     <i class="fa-solid fa-trash-can"></i> Reset Data
                 </button>
-                <button data-close-modal="modal-leaderboard" class="scifi-btn scifi-btn-primary px-6 py-2.5 rounded-xl text-xs font-bold text-white">
+                <button data-close-modal="modal-leaderboard" class="scifi-btn scifi-btn-primary px-5 sm:px-6 py-2 rounded-xl text-xs font-bold text-white">
                     Tutup
                 </button>
             </div>
@@ -689,26 +767,26 @@
     <!-- ==========================================
          MODAL 3: SETTINGS & AUDIO (FR-18)
          ========================================== -->
-    <div id="modal-settings" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-4">
-        <div class="scifi-panel w-full max-w-lg rounded-3xl p-6 sm:p-8">
-            <div class="flex items-center justify-between border-b border-slate-700/80 pb-4 mb-5">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-sliders text-2xl text-purple-400"></i>
-                    <h3 class="font-orbitron text-xl font-bold text-white">PENGATURAN SISTEM</h3>
+    <div id="modal-settings" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-md p-2 sm:p-4 safe-area-pad">
+        <div class="scifi-panel w-full max-w-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-h-[88dvh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-3 sm:pb-4 mb-4 sm:mb-5">
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <i class="fa-solid fa-sliders text-xl sm:text-2xl text-purple-400"></i>
+                    <h3 class="font-orbitron text-lg sm:text-xl font-bold text-white">PENGATURAN</h3>
                 </div>
-                <button data-close-modal="modal-settings" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                <button data-close-modal="modal-settings" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <div class="space-y-5 text-sm">
+            <div class="space-y-4 text-xs sm:text-sm">
                 <!-- Music Toggle & Volume -->
-                <div class="bg-slate-900/70 border border-slate-800 p-4 rounded-2xl space-y-3">
+                <div class="bg-slate-900/70 border border-slate-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-semibold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-music text-cyan-400"></i> Background Music
+                            <i class="fa-solid fa-music text-cyan-400"></i> Musik Latar
                         </span>
-                        <button id="toggle-music" class="px-3.5 py-1 rounded-full text-xs font-orbitron font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        <button id="toggle-music" class="px-3 py-0.5 rounded-full text-xs font-orbitron font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                             ON
                         </button>
                     </div>
@@ -722,18 +800,18 @@
                 </div>
 
                 <!-- SFX Toggle & Volume -->
-                <div class="bg-slate-900/70 border border-slate-800 p-4 rounded-2xl space-y-3">
+                <div class="bg-slate-900/70 border border-slate-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-semibold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-volume-high text-purple-400"></i> Sound Effects (SFX)
+                            <i class="fa-solid fa-volume-high text-purple-400"></i> Efek Suara (SFX)
                         </span>
-                        <button id="toggle-sfx" class="px-3.5 py-1 rounded-full text-xs font-orbitron font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        <button id="toggle-sfx" class="px-3 py-0.5 rounded-full text-xs font-orbitron font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                             ON
                         </button>
                     </div>
                     <div>
                         <div class="flex justify-between text-xs text-slate-400 mb-1">
-                            <span>Volume Efek Suara</span>
+                            <span>Volume SFX</span>
                             <span id="label-sfx-vol">80%</span>
                         </div>
                         <input id="slider-sfx-vol" type="range" min="0" max="100" value="80" />
@@ -741,10 +819,13 @@
                 </div>
 
                 <!-- Control Sensitivity -->
-                <div class="bg-slate-900/70 border border-slate-800 p-4 rounded-2xl space-y-2">
+                <div class="bg-slate-900/70 border border-slate-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
                     <div class="flex justify-between text-xs">
                         <span class="font-semibold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-gauge-high text-amber-400"></i> Sensitivitas Manuver Pesawat
+                            <i class="fa-solid fa-gauge-high text-amber-400"></i> Sensitivitas Gerak
+                        </span>
+                        <span id="label-sensitivity" class="text-cyan-300 font-orbitron">100%</span>
+                    </div>
                         </span>
                         <span id="label-sensitivity" class="text-cyan-300 font-orbitron">100%</span>
                     </div>
@@ -1408,18 +1489,22 @@
                 this.scene.background = new THREE.Color(0x050816);
                 this.scene.fog = new THREE.FogExp2(0x050816, 0.0075);
 
+                // Base Camera Target Z & Y
+                this.baseCamZ = 11.5;
+                this.baseCamY = 3.8;
+
                 this.camera = new THREE.PerspectiveCamera(
                     60,
                     window.innerWidth / window.innerHeight,
                     0.1,
                     400
                 );
-                this.camera.position.set(0, 3.8, 11.5);
+                this.camera.position.set(0, this.baseCamY, this.baseCamZ);
 
                 this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 // PRD 6.1: Cap pixel ratio for high-DPI performance
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 this.container.appendChild(this.renderer.domElement);
 
                 // Lighting
@@ -1445,15 +1530,71 @@
                 // Create Decorative Ringed Planet for Planetary Zone (FR-15)
                 this.createDecorativePlanets();
 
-                // Create Subtle Arena Boundary Corridor Grid
-                this.createArenaCorridor();
+                // Initialize Dynamic Viewport & Arena Bounds (NFR-05)
+                this.updateViewport();
 
-                // Responsive Viewport Resize (NFR-05)
-                window.addEventListener('resize', () => {
-                    this.camera.aspect = window.innerWidth / window.innerHeight;
-                    this.camera.updateProjectionMatrix();
-                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                // Responsive Viewport Resize & Orientation Change Listeners
+                window.addEventListener('resize', () => this.updateViewport());
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(() => this.updateViewport(), 150);
                 });
+                if (window.visualViewport) {
+                    window.visualViewport.addEventListener('resize', () => this.updateViewport());
+                }
+            }
+
+            /**
+             * Dynamic Responsive Viewport & Frustum Normalization (NFR-05)
+             * Dynamically scales camera FOV, distance, and arena boundaries across
+             * small mobile portrait, foldable, tablet, desktop, and ultrawide screens.
+             */
+            updateViewport() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                const aspect = width / height;
+
+                this.camera.aspect = aspect;
+
+                if (aspect < 0.75) {
+                    // Mobile Portrait (e.g. 9:16 ~ 0.56, 9:20 ~ 0.45)
+                    this.camera.fov = 76;
+                    this.baseCamZ = 15.2;
+                    this.baseCamY = 4.3;
+                    GAME_CONFIG.PLAYER.BOUNDS_X = Math.max(7.2, aspect * 15.2);
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MIN = -7.5;
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MAX = 8.5;
+                } else if (aspect < 1.15) {
+                    // Square Screens / Foldable / Tablet Portrait
+                    this.camera.fov = 68;
+                    this.baseCamZ = 13.5;
+                    this.baseCamY = 4.0;
+                    GAME_CONFIG.PLAYER.BOUNDS_X = Math.max(10.5, aspect * 14.0);
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MIN = -7.8;
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MAX = 8.8;
+                } else if (aspect < 1.5) {
+                    // Tablet Landscape (iPad ~1.33) / Small Laptops
+                    this.camera.fov = 63;
+                    this.baseCamZ = 12.2;
+                    this.baseCamY = 3.9;
+                    GAME_CONFIG.PLAYER.BOUNDS_X = 13.8;
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MIN = -8;
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MAX = 9;
+                } else {
+                    // Desktop / Widescreen / Mobile Landscape
+                    this.camera.fov = 60;
+                    this.baseCamZ = 11.5;
+                    this.baseCamY = 3.8;
+                    GAME_CONFIG.PLAYER.BOUNDS_X = 16;
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MIN = -8;
+                    GAME_CONFIG.PLAYER.BOUNDS_Y_MAX = 9;
+                }
+
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(width, height);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+                // Re-align arena boundary lines to new aspect ratio
+                this.createArenaCorridor();
             }
 
             createStarfield() {
@@ -1523,6 +1664,11 @@
             }
 
             createArenaCorridor() {
+                if (this.corridorGroup) {
+                    this.scene.remove(this.corridorGroup);
+                }
+                this.corridorGroup = new THREE.Group();
+
                 // Subtle corner guide lines so the player perceives depth and arena bounds
                 const material = new THREE.LineBasicMaterial({
                     color: 0x22d3ee,
@@ -1544,8 +1690,9 @@
                     ];
                     const geo = new THREE.BufferGeometry().setFromPoints(points);
                     const line = new THREE.Line(geo, material);
-                    this.scene.add(line);
+                    this.corridorGroup.add(line);
                 });
+                this.scene.add(this.corridorGroup);
             }
 
             /**
@@ -1643,6 +1790,17 @@
              * Keyboard & Touch Input System (PRD Section 5.4)
              */
             initInputListeners() {
+                // Auto-detect Touch Device
+                const detectTouch = () => {
+                    if (('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches) {
+                        document.body.classList.add('is-touch-device');
+                    }
+                };
+                detectTouch();
+                window.addEventListener('touchstart', () => {
+                    document.body.classList.add('is-touch-device');
+                }, { once: true, passive: true });
+
                 window.addEventListener('keydown', (e) => {
                     // Prevent page scrolling when Space or Arrow keys are used
                     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
@@ -1684,8 +1842,9 @@
                 document.querySelectorAll('[data-touch-dir]').forEach((btn) => {
                     const dir = btn.getAttribute('data-touch-dir');
                     const setDir = (val) => { this.keys[dir] = val; };
-                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); setDir(true); });
-                    btn.addEventListener('touchend', (e) => { e.preventDefault(); setDir(false); });
+                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); setDir(true); }, { passive: false });
+                    btn.addEventListener('touchend', (e) => { e.preventDefault(); setDir(false); }, { passive: false });
+                    btn.addEventListener('touchcancel', (e) => { e.preventDefault(); setDir(false); }, { passive: false });
                     btn.addEventListener('mousedown', () => setDir(true));
                     btn.addEventListener('mouseup', () => setDir(false));
                     btn.addEventListener('mouseleave', () => setDir(false));
@@ -1693,11 +1852,64 @@
 
                 const touchFireBtn = document.getElementById('btn-touch-fire');
                 if (touchFireBtn) {
-                    touchFireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); this.keys.shoot = true; });
-                    touchFireBtn.addEventListener('touchend', (e) => { e.preventDefault(); this.keys.shoot = false; });
+                    touchFireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); this.keys.shoot = true; }, { passive: false });
+                    touchFireBtn.addEventListener('touchend', (e) => { e.preventDefault(); this.keys.shoot = false; }, { passive: false });
+                    touchFireBtn.addEventListener('touchcancel', (e) => { e.preventDefault(); this.keys.shoot = false; }, { passive: false });
                     touchFireBtn.addEventListener('mousedown', () => { this.keys.shoot = true; });
                     touchFireBtn.addEventListener('mouseup', () => { this.keys.shoot = false; });
                 }
+
+                // Intuitive Direct Touch/Drag Steering on Canvas (Mobile/Tablet)
+                let touchDragStartX = 0;
+                let touchDragStartY = 0;
+                let isTouchDragging = false;
+
+                window.addEventListener('touchstart', (e) => {
+                    if (this.state !== GAME_STATE.PLAYING || !e.touches[0]) return;
+                    if (e.target.closest('#touch-controls') || e.target.closest('button') || e.target.closest('.scifi-panel')) {
+                        return;
+                    }
+                    touchDragStartX = e.touches[0].clientX;
+                    touchDragStartY = e.touches[0].clientY;
+                    isTouchDragging = true;
+                }, { passive: true });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (!isTouchDragging || this.state !== GAME_STATE.PLAYING || !e.touches[0]) return;
+                    if (e.target.closest('#touch-controls') || e.target.closest('button')) return;
+
+                    const curX = e.touches[0].clientX;
+                    const curY = e.touches[0].clientY;
+                    const dx = curX - touchDragStartX;
+                    const dy = curY - touchDragStartY;
+
+                    const sens = (this.storage.data.settings.sensitivity || 1.0) * 0.052;
+                    this.playerMesh.position.x += dx * sens;
+                    this.playerMesh.position.y -= dy * sens;
+
+                    this.playerMesh.position.x = THREE.MathUtils.clamp(
+                        this.playerMesh.position.x,
+                        -GAME_CONFIG.PLAYER.BOUNDS_X,
+                        GAME_CONFIG.PLAYER.BOUNDS_X
+                    );
+                    this.playerMesh.position.y = THREE.MathUtils.clamp(
+                        this.playerMesh.position.y,
+                        GAME_CONFIG.PLAYER.BOUNDS_Y_MIN,
+                        GAME_CONFIG.PLAYER.BOUNDS_Y_MAX
+                    );
+
+                    this.touchRoll = THREE.MathUtils.clamp(-dx * 0.045, -0.48, 0.48);
+
+                    touchDragStartX = curX;
+                    touchDragStartY = curY;
+                }, { passive: true });
+
+                const stopTouchDrag = () => {
+                    isTouchDragging = false;
+                    this.touchRoll = 0;
+                };
+                window.addEventListener('touchend', stopTouchDrag, { passive: true });
+                window.addEventListener('touchcancel', stopTouchDrag, { passive: true });
             }
 
             clearKeys() {
@@ -1871,7 +2083,7 @@
                             <td class="py-2.5 px-3 font-medium text-white">${this.escapeHtml(item.name)}</td>
                             <td class="py-2.5 px-3 text-right font-orbitron text-cyan-300 font-bold">${item.score.toLocaleString()}</td>
                             <td class="py-2.5 px-3 text-center text-purple-300">Lv.${item.level}</td>
-                            <td class="py-2.5 px-3 text-right text-slate-400 text-xs">${item.date}</td>
+                            <td class="py-2.5 px-3 text-right text-slate-400 text-xs hidden sm:table-cell">${item.date}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1916,13 +2128,21 @@
                 this.clearAllEntities();
                 this.applyEnvironmentTheme(1);
 
-                // Position ship as a 3D decorative showcase on the right side of the Main Menu (FR-16)
+                // Responsive 3D Decorative Ship Showcase Position (FR-16)
                 this.playerMesh.visible = true;
                 this.playerModel.reticle.visible = false;
-                this.playerMesh.position.set(3.2, 0.2, 4.5);
+                const isPortrait = (window.innerWidth / window.innerHeight) < 1.0;
+                const shipX = isPortrait ? 0 : 3.2;
+                const shipY = isPortrait ? -1.6 : 0.2;
+                const shipZ = isPortrait ? 5.2 : 4.5;
+                this.playerMesh.position.set(shipX, shipY, shipZ);
                 this.playerMesh.rotation.set(0.15, -0.55, 0.1);
-                this.camera.position.set(0, 1.5, 11);
-                this.camera.lookAt(1.2, 0.2, 0);
+
+                const camY = isPortrait ? 1.0 : 1.5;
+                const camZ = isPortrait ? 12.8 : 11;
+                const lookAtX = isPortrait ? 0 : 1.2;
+                this.camera.position.set(0, camY, camZ);
+                this.camera.lookAt(lookAtX, 0.2, 0);
 
                 this.hideAllScreens();
                 const menu = document.getElementById('screen-menu');
@@ -2448,18 +2668,21 @@
                 );
 
                 // Smooth Ship Banking / Tilting Animation & Engine Pulse
-                const targetRoll = -moveX * 0.48;
+                const rollFromInput = -moveX * 0.48;
+                const targetRoll = (this.touchRoll !== undefined && this.touchRoll !== 0) ? this.touchRoll : rollFromInput;
                 const targetPitch = moveY * 0.25;
                 this.playerMesh.rotation.z = THREE.MathUtils.lerp(this.playerMesh.rotation.z, targetRoll, 10 * dt);
                 this.playerMesh.rotation.x = THREE.MathUtils.lerp(this.playerMesh.rotation.x, targetPitch, 10 * dt);
                 this.playerModel.thruster.scale.z = 0.85 + Math.sin(performance.now() * 0.025) * 0.2;
 
                 // 3. Smooth Chase Camera Following Player Ship (PRD 3.3)
+                const targetBaseY = this.baseCamY || 3.8;
+                const targetBaseZ = this.baseCamZ || 11.5;
                 const camTargetX = this.playerMesh.position.x * 0.45;
-                const camTargetY = 3.6 + this.playerMesh.position.y * 0.35;
+                const camTargetY = targetBaseY + this.playerMesh.position.y * 0.32;
                 this.camera.position.x = THREE.MathUtils.lerp(this.camera.position.x, camTargetX, 6 * dt);
                 this.camera.position.y = THREE.MathUtils.lerp(this.camera.position.y, camTargetY, 6 * dt);
-                this.camera.position.z = 11.5;
+                this.camera.position.z = THREE.MathUtils.lerp(this.camera.position.z, targetBaseZ, 6 * dt);
 
                 if (this.screenShakeTimer > 0) {
                     this.screenShakeTimer -= dt;
@@ -2695,7 +2918,9 @@
                     // Decorative 3D Ship Floating Animation on Main Menu (FR-16)
                     this.updateStarfield(dt, 0.5);
                     const t = performance.now() * 0.001;
-                    this.playerMesh.position.y = 0.2 + Math.sin(t * 1.8) * 0.35;
+                    const isPortrait = (this.camera.aspect || 1) < 1.0;
+                    const baseY = isPortrait ? -1.6 : 0.2;
+                    this.playerMesh.position.y = baseY + Math.sin(t * 1.8) * 0.35;
                     this.playerMesh.rotation.y = -0.55 + Math.sin(t * 0.9) * 0.22;
                     this.playerMesh.rotation.z = 0.1 + Math.cos(t * 1.3) * 0.08;
                     this.playerModel.thruster.scale.z = 0.85 + Math.sin(t * 20) * 0.2;
